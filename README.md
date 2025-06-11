@@ -1,6 +1,16 @@
 # ft_transcendence
 last  42 project, a pong web app
 
+## to start backend on your local environment
+
+```
+npm run dev
+```
+## API INFO
+
+la documentazioni relativa alle api si trova su http://localhost:5000/docs.
+Il file request.http simula delle chiamate curl e dipenda dall'estensione https://marketplace.visualstudio.com/items?itemName=humao.rest-client (cerca REST client)
+
 
 ---
 

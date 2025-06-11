@@ -1,0 +1,29 @@
+###basic test request
+
+GET http://localhost:5000/users HTTP/1.1
+
+### id request
+
+GET http://localhost:5000/user/1 HTTP/1.1
+
+### post user 
+
+POST http://localhost:5000/user HTTP/1.1
+Content-Type: application/json
+
+{
+	"name": "tory"
+}
+
+### delete user
+
+DELETE http://localhost:5000/user/1 HTTP/1.1
+
+### update a user
+
+PUT http://localhost:5000/user/1 HTTP/1.1
+Content-Type: application/json
+
+{
+	"name": "toro fortissimo"
+}
