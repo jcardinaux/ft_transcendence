@@ -1,11 +1,37 @@
 # ft_transcendence
 last  42 project, a pong web app
 
+## modules
+
+- Major module: Implement Two-Factor Authentication (2FA) and JWT. ```DONE```
+- Major module: use fastify as backend . ```USING IT``` ```HTTPS IMPLEMENTED```
+- Major module: Standard user management, authentication and users across tournaments. ON ```WORKING```
+- Major module: Major module: Remote players. ```NOT STARTED```
+- Major module: Live Chat. ```NOT STARTED```
+
+- Minor module: Use a database for the backend -and more. ```USING IT```
+- Minor module: Use a framework or toolkit to build the front-end. ```NOT STARTED```
+- Minor module: Game customization options. ```NOT STARTED```
+- Minor module: User and Game Stats Dashboards ```NOT STARTED``` ```FORSE NE CONVIENE UN'ALTRO``` 
+
 ## to start backend on your local environment
 
 ```
 npm run dev
 ```
+
+è il primo avvio?? lancia il comando :
+```
+ npm i
+```
+questo leggerà il package.json ed installerà tutti i paccketti necessari
+
+### attenzione
+a modificarlo ci sono tutte le versioni!!!! se un pacchetto non vine utilizzato disinstallarlo con 
+```
+npm uninstall <nome pacchetto>
+```
+
 ## API INFO
 
 la documentazioni relativa alle api si trova su http://localhost:5000/docs.
@@ -132,6 +158,97 @@ Implementa in ordine:
 
 ---
 
-Questo percorso è pensato per massimizzare la coerenza e ridurre il lavoro sprecato. Sembra un bel po' da fare, ma suddividendolo in questi passaggi, diventa molto più gestibile.
 
-Sono qui per aiutarti in ogni fase! Quale parte vorresti iniziare ad approfondire per prima? Possiamo partire dalla configurazione di Docker e Fastify se vuoi!
+
+
+### appunti su fastify
+
+fast overview https://www.youtube.com/watch?v=btGtOue1oDA&t=177s
+
+life cycle e hook
+
+```
+   ┌────────────────────────┐
+   │     Richiesta Arriva   │
+   └────────────────────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │  **onRequest**  │ (Prima di tutto)
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │   Routing │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │ **preParsing**  │ (Prima di leggere il corpo)
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │ Leggo il  │
+         │   Corpo   │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │**preValidation** (Prima di validare i dati) │
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │ Validazione │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │  **preHandler** │ (Prima della logica della rotta)
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │ La tua Logica  │
+         │   (Handler)   │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │ **preSerialization** (Prima di convertire in JSON) │
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │ Converto in │
+         │    JSON     │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │    **preReply** │ (Poco prima di spedire la risposta)
+      └─────────────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │    **onSend** │ (Un attimo prima dell'invio finale)
+      └─────────────────┘
+              │
+              ▼
+         ┌───────────┐
+         │   Invio la  │
+         │  Risposta   │
+         └───────────┘
+              │
+              ▼
+      ┌─────────────────┐
+      │ **onResponse** │ (Dopo che la risposta è partita)
+      └─────────────────┘
+              │
+              ▼
+   ┌────────────────────────┐
+   │ Richiesta Completata   │
+   └────────────────────────┘
+
+   ```

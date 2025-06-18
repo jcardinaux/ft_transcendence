@@ -1,29 +1,64 @@
+###auth api
 ###basic test request
-
-GET http://localhost:5000/users HTTP/1.1
+GET https://localhost:5000/auth/users HTTP/1.1
 
 ### id request
-
-GET http://localhost:5000/user/1 HTTP/1.1
+GET https://localhost:5000/auth/user/1 HTTP/1.1
 
 ### post user 
-
-POST http://localhost:5000/user HTTP/1.1
+POST https://localhost:5000/auth/user HTTP/1.1
 Content-Type: application/json
 
 {
-	"name": "tory"
+	"username": "zack e fron",
+	"password": "testPWD",
+	"email": "zackefron@mail.com"
+}
+
+### login
+POST https://localhost:5000/auth/login HTTP/1.1
+Content-Type: application/json
+
+{
+	"username": "zackilboro@mail.com",
+	"password": "testPWD"
 }
 
 ### delete user
+DELETE https://localhost:5000/auth/user/3 HTTP/1.1
 
-DELETE http://localhost:5000/user/1 HTTP/1.1
 
-### update a user
 
-PUT http://localhost:5000/user/1 HTTP/1.1
+
+### profile api
+
+### update username
+
+PUT https://localhost:5000/profile/changeUsername HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer <jwt token>
 
 {
-	"name": "toro fortissimo"
+	"username": "toro fortissimo"
+}
+
+### get 2fa qrCode 
+
+GET https://localhost:5000/profile/generate2FA HTTP/1.1
+Authorization: Bearer jwt token
+
+###  get all user info protetta inserire JWT valido per testarla
+
+GET https://localhost:5000/profile/allUserInfo HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b3JvIGZvcnRpc3NpbW8iLCJpYXQiOjE3NTAxODEzNjksImV4cCI6MTc1MDI2Nzc2OX0.Oxjr8fd-AwjvSJdrFlBLJdBWOw5j3E3Hxo4HqpEWeuw
+
+
+### verify 2fa protetta inserire JWT valido per testarla
+ 
+POST  https://localhost:5000/profile/verify2FA HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b3JvIGZvcnRpc3NpbW8iLCJpYXQiOjE3NTAxODEzNjksImV4cCI6MTc1MDI2Nzc2OX0.Oxjr8fd-AwjvSJdrFlBLJdBWOw5j3E3Hxo4HqpEWeuw
+
+{
+	"token": "588683"
 }
