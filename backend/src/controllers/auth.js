@@ -18,15 +18,17 @@ export const getSingleUser = (req, reply) => {
 }
 
 export const addUser = async (req, reply) => {
-	const {username, password, email} = req.body
+	let {username, password, email, display_name} = req.body
 	const cryptedPsw = await bcrypt.hash(password, 10)
 	try {
-		const stmt = reply.server.db.prepare('INSERT INTO users (username, password, email) VALUES (? , ?, ?)')
-		const newUser = stmt.run(username, cryptedPsw, email)
+		const stmt = reply.server.db.prepare('INSERT INTO users (username, password, email, display_name) VALUES (? , ?, ?, ?)')
+		if(!display_name)
+			display_name = username
+		const newUser = stmt.run(username, cryptedPsw, email, display_name)
 		reply.code(201).send({id: newUser.lastInsertRowid, username, email})
 	}
 	catch (err) {
-		reply.code(400).send({message: "username or email already used"})
+		reply.code(400).send({message: err})
 	}
 }
 

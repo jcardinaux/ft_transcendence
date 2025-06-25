@@ -36,7 +36,8 @@ export const postUserOpts = {
             properties: {
                 username: {type: 'string'},
                 password: {type: 'string'},
-				email: {type: 'string'}
+				email: {type: 'string'},
+                display_name: {type: 'string'}
             },
         },
         response: {

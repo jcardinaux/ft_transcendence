@@ -20,8 +20,8 @@ POST https://localhost:5000/auth/login HTTP/1.1
 Content-Type: application/json
 
 {
-	"username": "zackilboro@mail.com",
-	"password": "testPWD"
+	"username": "a",
+	"password": "a"
 }
 
 ### delete user
@@ -33,7 +33,6 @@ DELETE https://localhost:5000/auth/user/3 HTTP/1.1
 ### profile api
 
 ### update username
-
 PUT https://localhost:5000/profile/changeUsername HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer <jwt token>
@@ -43,18 +42,15 @@ Authorization: Bearer <jwt token>
 }
 
 ### get 2fa qrCode 
-
 GET https://localhost:5000/profile/generate2FA HTTP/1.1
 Authorization: Bearer jwt token
 
 ###  get all user info protetta inserire JWT valido per testarla
-
 GET https://localhost:5000/profile/allUserInfo HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b3JvIGZvcnRpc3NpbW8iLCJpYXQiOjE3NTAxODEzNjksImV4cCI6MTc1MDI2Nzc2OX0.Oxjr8fd-AwjvSJdrFlBLJdBWOw5j3E3Hxo4HqpEWeuw
 
 
 ### verify 2fa protetta inserire JWT valido per testarla
- 
 POST  https://localhost:5000/profile/verify2FA HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b3JvIGZvcnRpc3NpbW8iLCJpYXQiOjE3NTAxODEzNjksImV4cCI6MTc1MDI2Nzc2OX0.Oxjr8fd-AwjvSJdrFlBLJdBWOw5j3E3Hxo4HqpEWeuw
@@ -62,3 +58,27 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hb
 {
 	"token": "588683"
 }
+
+### change display name
+PUT https://localhost:5000/profile/changeUsername HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer <jwt token>
+
+{
+	"display_name": "toro fortissimo"
+}
+
+### change password
+PUT https://localhost:5000/profile/changeUsername HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer <jwt token>
+
+{
+	"newPassword": "nuovaPassword",
+	"oldPassword": "cory"
+}
+
+# chiamata curl per fare il post dell'avatar
+# curl -k -X POST https://localhost:5000/profile/uploadAvatar \
+#  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwidXNlcm5hbWUiOiJhIiwiaWF0IjoxNzUwNzY1ODA3LCJleHAiOjE3NTA4NTIyMDd9.NcOnx1Y0O99bLeG7HX0yNpPoiIIsYyLg_uqM9REXrAo" \
+# -F "avatar=@/home/jacar/smiling-guy.jpg"

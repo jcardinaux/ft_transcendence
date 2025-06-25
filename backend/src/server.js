@@ -3,8 +3,12 @@ import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import fastifyEnv from '@fastify/env'
 import jwt from 'jsonwebtoken'
+import multipart from '@fastify/multipart'
+import fastifyStatic from '@fastify/static'
+import { fileURLToPath } from 'url';
 
-import {resolve} from 'node:path'
+
+import path, {resolve} from 'node:path'
 import { readFileSync } from 'node:fs'
 
 import authRoutes from "./routes/auth.js"
@@ -16,8 +20,10 @@ const httpOption = {
     cert: readFileSync(resolve('certs', 'server.crt'))
 }
 
-const app = fastify({logger:true, https: httpOption})
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+//env importer
 const schema = {
     type: 'object',
     required: ['FASTIFY_PORT', 'JWT_SECRET', 'NODE_ENV'],
@@ -35,6 +41,7 @@ const schema = {
         }
     }
 }
+const app = fastify({logger:true, https: httpOption})
 
 //database are now avaiable in all the project
 app.decorate('db', db)
@@ -53,13 +60,19 @@ app.decorate('verifyJWT', async function (req, reply) {
     }
 })
 
+//cuore del server inizializza le rotte
 const start = async () => {
     try {
         await app.register(fastifyEnv, {
-            dotenv: true, // Abilita il caricamento dal file .env
-            schema: schema, // Associa lo schema definito sopra per la validazione
-            confKey: 'config', // Le variabili saranno accessibili via app.config (opzionale, default è 'config')
+            dotenv: true, 
+            schema: schema,
+            confKey: 'config', //accesso gobale tramite  app.config 
         });
+        await app.register(multipart)
+        await app.register(fastifyStatic, {
+            root: path.join(__dirname, '..', 'public'),
+            prefix: '/public/'
+        })
         await app.register(fastifySwagger, {
             openapi: {
                 info: {
@@ -68,7 +81,7 @@ const start = async () => {
                     version: '0.0.1',
                 },
                 servers: [
-                    { url: `http://localhost:${app.config.FASTIFY_PORT}`, description: 'Development server' }
+                    { url: `https://localhost:${app.config.FASTIFY_PORT}`, description: 'Development server' }
                 ],
                 tags: [
                     {name: 'Auth', description: 'login and user menagment'},
@@ -89,17 +102,14 @@ const start = async () => {
         })
         
         await app.register(fastifySwaggerUi, {
-            routePrefix: '/docs', // L'URL dove sarà visibile la documentazione (es. http://localhost:5000/docs)
+            routePrefix: '/docs',
             uiConfig: {
-                docExpansion: 'full', // Espandi tutte le sezioni di default
-                deepLinking: true // Abilita i link profondi
+                deepLinking: true 
             },
-            // Le opzioni per initOAuth, validatorUrl, ecc.
         })
-        
         await app.register(authRoutes, {prefix: '/auth'})
         await app.register(profileRoute, {prefix: '/profile'})
-        await app.listen({port: app.config.FASTIFY_PORT})
+        await app.listen({port: app.config.FASTIFY_PORT, host: '0.0.0.0'})
     }
     catch (error) {
         app.log.error(error)
