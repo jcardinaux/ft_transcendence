@@ -12,13 +12,22 @@ db.exec(`
     email TEXT NOT NULL UNIQUE,
     avatar TEXT,
     totp_secret TEXT,
-    twofa_enabled BOOLEAN DEFAULT 0
+    twofa_enabled BOOLEAN DEFAULT 0,
+    last_seen TEXT DEFAULT CURRENT_TIMESTAMP
   );
   CREATE TABLE IF NOT EXISTS friends (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
     friend_id INTEGER NOT NULL,
     UNIQUE(user_id, friend_id)
+  );
+  CREATE TABLE IF NOT EXISTS matches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  player1_id INTEGER NOT NULL,
+  player2_id INTEGER NOT NULL,
+  winner_id INTEGER NOT NULL,
+  score TEXT NOT NULL,
+  date TEXT DEFAULT (datetime('now'))
   );
 `)
 

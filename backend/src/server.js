@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 import multipart from '@fastify/multipart'
 import fastifyStatic from '@fastify/static'
 import { fileURLToPath } from 'url';
+import WebSocket from '@fastify/websocket'
 
 
 import path, {resolve} from 'node:path'
@@ -14,6 +15,7 @@ import { readFileSync } from 'node:fs'
 import authRoutes from "./routes/auth.js"
 import  db from "../database/db.js"
 import profileRoute from './routes/profile.js'
+import matchesRoute from './routes/match.js'
 
 const httpOption = {
     key: readFileSync(resolve('certs', 'server.key')),
@@ -45,8 +47,11 @@ const app = fastify({logger:true, https: httpOption})
 
 //database are now avaiable in all the project
 app.decorate('db', db)
+ 
+const onlineUsers = new Map()
+app.decorate('onlineUsers', onlineUsers)
 
-//middlewere JWT, for protected route
+//middlewere JWT
 app.decorate('verifyJWT', async function (req, reply) {
     try {
         const tokenRaw = req.headers.authorization
@@ -54,15 +59,17 @@ app.decorate('verifyJWT', async function (req, reply) {
         const token = tokenRaw.split(' ')[1]
         const decoded = jwt.verify(token, this.config.JWT_SECRET)
         req.user = decoded
+        this.db.prepare('UPDATE users SET last_seen = datetime(\'now\') WHERE id = ?').run(req.user.id)
     }
     catch (err){
-        reply.code(401).send({message: 'unauthorized'})
+        reply.code(401).send({message: 'unouthorized'})
     }
 })
 
 //cuore del server inizializza le rotte
 const start = async () => {
     try {
+        await app.register(WebSocket)
         await app.register(fastifyEnv, {
             dotenv: true, 
             schema: schema,
@@ -89,11 +96,10 @@ const start = async () => {
                 ],
                 components: {
                     securitySchemes: {
-                        // Definisci il tuo schema di sicurezza chiamato 'bearerAuth'
                         bearerAuth: {
-                            type: 'http',        // Indica che è un metodo di autenticazione HTTP
-                            scheme: 'bearer',    // Il tipo di schema è 'bearer' (per i token Bearer)
-                            bearerFormat: 'JWT', // Formato opzionale, indica che si tratta di un JWT
+                            type: 'http',
+                            scheme: 'bearer',
+                            bearerFormat: 'JWT',
                             description: 'Autenticazione JWT tramite header Authorization (Bearer Token)'
                         }
                     }
@@ -109,6 +115,7 @@ const start = async () => {
         })
         await app.register(authRoutes, {prefix: '/auth'})
         await app.register(profileRoute, {prefix: '/profile'})
+        await app.register(matchesRoute, {prefix: '/matches'})
         await app.listen({port: app.config.FASTIFY_PORT, host: '0.0.0.0'})
     }
     catch (error) {

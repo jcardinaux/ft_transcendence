@@ -1,14 +1,17 @@
+
 import { UsernameOpts,
 	allUserOpts,
 	generate2FAOpts,
 	verify2FAOpts,
 	displayNameOpts,
 	passwordOpts,
-	avatarUploadOpts} from "../schemas/profile.js"
+	avatarUploadOpts,
+	addFriendOpts,
+	deleteFriendOpts,
+	getFriendsOpts} from "../schemas/profile.js"
 
 async function profileRoute(fastify, options){
-
-	//change only username 
+ 
 	fastify.put("/changeUsername", UsernameOpts)
 	fastify.get("/allUserInfo", allUserOpts)
 	fastify.get("/generate2FA", generate2FAOpts)
@@ -16,6 +19,9 @@ async function profileRoute(fastify, options){
 	fastify.post("/uploadAvatar", avatarUploadOpts)
 	fastify.put("/changeDisplayName", displayNameOpts)
 	fastify.put("/changePassword", passwordOpts)
+	fastify.post("/addFriend/:friendID", addFriendOpts)
+	fastify.delete("/deleteFriend/:friendID", deleteFriendOpts)
+	fastify.get("/getFriends", getFriendsOpts)
 }
 
 export default profileRoute

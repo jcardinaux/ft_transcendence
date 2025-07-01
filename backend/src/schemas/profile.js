@@ -4,8 +4,11 @@ import {showAllUseriInfo,
 		verify2FA,
 		changeDisplayName, 
 		changePassword,
-		uploadAvatar} from "../controllers/profile.js"
-import { CompleteUserSchema, MessageSchema } from "../schemas/utils.js"
+		uploadAvatar,
+		addFriend,
+		deleteFriend,
+		getFriends} from "../controllers/profile.js"
+import { CompleteUserSchema, MessageSchema, FriendSchema } from "../schemas/utils.js"
 
 export const UsernameOpts = {
 	schema:{
@@ -124,4 +127,50 @@ export const avatarUploadOpts = {
 	},
 	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
 	handler: uploadAvatar
+}
+
+
+export const addFriendOpts =  {
+	schema: {
+		tags: ['Profile'],
+		security: [{ bearerAuth: [] }],
+		response: {
+			200: MessageSchema,
+			404: MessageSchema,
+			400: MessageSchema
+		}
+	},
+	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
+	handler: addFriend
+}
+
+export const deleteFriendOpts =  {
+	schema: {
+		tags: ['Profile'],
+		security: [{ bearerAuth: [] }],
+		response: {
+			200: MessageSchema,
+			404: MessageSchema,
+			400: MessageSchema
+		}
+	},
+	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
+	handler: deleteFriend
+}
+
+export const getFriendsOpts = {
+	schema: {
+		tags: ['Profile'],
+		security: [{ bearerAuth: []}],
+		response: {
+			200:{
+				type: 'array',
+				items: FriendSchema
+			},
+			404: MessageSchema,
+			401: MessageSchema
+		},
+	},
+	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
+	handler: getFriends
 }

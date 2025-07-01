@@ -12,7 +12,11 @@ last  42 project, a pong web app
 - Minor module: Use a database for the backend -and more. ```USING IT```
 - Minor module: Use a framework or toolkit to build the front-end. ```NOT STARTED```
 - Minor module: Game customization options. ```NOT STARTED```
-- Minor module: User and Game Stats Dashboards ```NOT STARTED``` ```FORSE NE CONVIENE UN'ALTRO``` 
+- Minor module: User and Game Stats Dashboards ```NOT STARTED``` ```FORSE NE CONVIENE UN'ALTRO```
+
+## note
+
+- websocket started not implemented work for later in chat and multiplayer module
 
 ## to start backend on your local environment
 

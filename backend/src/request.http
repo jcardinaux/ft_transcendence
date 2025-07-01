@@ -47,7 +47,7 @@ Authorization: Bearer jwt token
 
 ###  get all user info protetta inserire JWT valido per testarla
 GET https://localhost:5000/profile/allUserInfo HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJ0b3JvIGZvcnRpc3NpbW8iLCJpYXQiOjE3NTAxODEzNjksImV4cCI6MTc1MDI2Nzc2OX0.Oxjr8fd-AwjvSJdrFlBLJdBWOw5j3E3Hxo4HqpEWeuw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhIiwiaWF0IjoxNzUxMjE2Nzc3LCJleHAiOjE3NTEzMDMxNzd9.KX_oBRmHb6kh2OMduzk2BOZK6IvENvKcLMrusvyF8Jg
 
 
 ### verify 2fa protetta inserire JWT valido per testarla

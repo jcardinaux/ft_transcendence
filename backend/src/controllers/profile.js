@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { pipeline } from 'stream/promises'
 import { randomUUID } from 'crypto'
+import { REPL_MODE_SLOPPY } from 'repl'
 
 export const updateUserName = async (req, reply) => {
 	const {id} = req.user
@@ -112,4 +113,52 @@ export const uploadAvatar = async (req, reply) => {
 	req.server.db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(avatarUrl, id)
 
 	reply.send({ message: 'Avatar uploaded', url: avatarUrl })
+}
+
+export const addFriend = async (req, reply) => {
+	const {friendID} = req.params
+	const { id } = req.user
+
+	const checkFriend = reply.server.db.prepare('SELECT id FROM users WHERE id = ? ').get(friendID)
+	if(!checkFriend)
+		return reply.code(404).send({ message: "Friend not found" })
+	if(id == friendID)
+		return reply.code(400).send({message: 'cant add yourself'})
+	try{
+		const stmt = reply.server.db.prepare('INSERT OR IGNORE INTO friends (user_id, friend_id) VALUES (?, ?)')
+		stmt.run(id, friendID)
+		reply.send({message: `user ${id} add user ${friendID} as a friend`})
+	}
+	catch (err){
+		REPL_MODE_SLOPPY.code(400).send({message: err})
+	}
+}
+
+export const deleteFriend = async (req, reply) => {
+		const {friendID} = req.params
+	const { id } = req.user
+
+	const checkFriend = reply.server.db.prepare('SELECT id FROM users WHERE id = ? ').get(friendID)
+	if(!checkFriend)
+		return reply.code(404).send({ message: "Friend not found" })
+	if(id === friendID)
+		return reply.code(400).send({message: 'cant add yourself'})
+	const changes = reply.server.db.prepare('DELETE FROM friends WHERE user_id = ? AND friend_id = ?').run(id, friendID)
+	if (changes.changes === 0)
+		reply.code(404).send({message: 'no frienship founded'})
+}
+
+
+export const getFriends = async (req, reply) => {
+	const { id } = req.user
+	const friends = req.server.db.prepare(`
+		SELECT u.id, u.username, u.display_name, u.avatar,
+		       u.last_seen,
+		       CASE WHEN datetime(u.last_seen) >= datetime('now', '-2 minutes') THEN 1 ELSE 0 END AS is_online
+		FROM users u
+		JOIN friends f ON u.id = f.friend_id
+		WHERE f.user_id = ?
+	`).all(id)
+
+	reply.send(friends)
 }
