@@ -12,6 +12,7 @@
   "type": "module",
   "description": "",
   "dependencies": {
+    "@fastify/cors": "^11.0.1",
     "@fastify/env": "^5.0.2",
     "@fastify/multipart": "^9.0.3",
     "@fastify/static": "^8.2.0",

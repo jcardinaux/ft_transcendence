@@ -1,4 +1,5 @@
 import fastify from 'fastify'
+import cors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
 import fastifySwaggerUi from '@fastify/swagger-ui'
 import fastifyEnv from '@fastify/env'
@@ -45,6 +46,12 @@ const schema = {
 }
 const app = fastify({logger:true, https: httpOption})
 
+// Allow all: HTTP/HTTPS
+await app.register(cors, {
+    origin: true ,
+    credentials: true
+})
+
 //database are now avaiable in all the project
 app.decorate('db', db)
  
@@ -88,7 +95,7 @@ const start = async () => {
                     version: '0.0.1',
                 },
                 servers: [
-                    { url: `https://localhost:${app.config.FASTIFY_PORT}`, description: 'Development server' }
+                    { url: `https://localhost:${app.config.FASTIFY_PORT}`, description: 'Local dev: Development server' },
                 ],
                 tags: [
                     {name: 'Auth', description: 'login and user menagment'},
