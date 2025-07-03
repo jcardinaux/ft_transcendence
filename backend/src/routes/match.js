@@ -2,7 +2,8 @@ import { addMatchOpts, allMatchOpts, allUserMatchOpts, deleteMatchOpts } from ".
 
 async function matchesRoute (fastify, options) {
 	fastify.get("/allMatches", allMatchOpts)
-	fastify.get("/userAllMAtches", allUserMatchOpts)
+	//get all match of non logged user such as friends
+	fastify.get("/userAllMAtches/:id", allUserMatchOpts)
 	fastify.post("/addMatch", addMatchOpts)
 	fastify.delete("/deletaMatch/:id", deleteMatchOpts)
 }

@@ -162,3 +162,22 @@ export const getFriends = async (req, reply) => {
 
 	reply.send(friends)
 }
+
+export const userStats = async (req, reply) => {
+	const {id} = req.user
+	const winStmt = reply.server.db.prepare('SELECT COUNT(*) AS wins FROM matches WHERE winner_id = ?')
+	const looseStmt = reply.server.db.prepare('SELECT COUNT(*) AS losses FROM matches WHERE (player1_id = ? OR player2_id = ?) AND winner_id != ?')
+	const matchStmt = reply.server.db.prepare('SELECT COUNT(*) AS matchNumber FROM matches WHERE player1_id = ? OR player2_id = ?')
+	const {wins} = winStmt.get(id)
+	const {losses} = looseStmt.get(id, id, id)
+	const {matchNumber} = matchStmt.get(id, id)
+
+	reply.send({wins, losses, matchNumber})
+}
+
+export const allUserMathces = async (req, reply) => {
+	const {id} = req.user
+	const stmt = reply.server.db.prepare('SELECT * FROM matches WHERE player1_id = ? OR player2_id = ? ORDER BY date DESC')
+	const matches = stmt.all(id, id)
+	reply.send(matches)
+}

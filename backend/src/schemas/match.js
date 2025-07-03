@@ -17,7 +17,6 @@ export const allMatchOpts = {
 export const allUserMatchOpts = {
 	schema: {
 		tags: ['Match'],
-		security: [{ bearerAuth: [] }],
 		response : {
 			200: {
 				type: 'array',
@@ -25,7 +24,6 @@ export const allUserMatchOpts = {
 			}
 		}
 	},
-	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
 	handler: allUserMatch
 }
 
