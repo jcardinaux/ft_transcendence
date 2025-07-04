@@ -1,10 +1,15 @@
 {
-  "name": "backend",
+  "name": "app",
   "version": "1.0.0",
   "main": "./src/server.js",
   "scripts": {
-    "start": "node server",
-    "dev": "nodemon server"
+    "start": "node src/server.js",
+    "dev": "concurrently \"npm run watch-css\" \"npm run watch-ts\" \"nodemon src/server.js\"",
+    "watch-css": "tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch",
+    "watch-ts": "tsc --watch",
+    "build-css": "tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --minify",
+    "build-ts": "tsc",
+    "build": "npm run build-css && npm run build-ts"
   },
   "keywords": [],
   "author": "",
@@ -26,5 +31,11 @@
     "nodemon": "^3.1.10",
     "otplib": "^12.0.1",
     "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "concurrently": "^9.2.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3"
   }
 }

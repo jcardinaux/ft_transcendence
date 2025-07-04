@@ -1,5 +1,5 @@
 import { getAllUsers, getSingleUser, addUser, deleteUser, login} from '../controllers/auth.js'
-import { MessageSchema, UserSchema } from '../schemas/utils.js'
+import { MessageSchema, UserSchema } from './utils.js'
 
 export const getUserOpts = {
     schema: {

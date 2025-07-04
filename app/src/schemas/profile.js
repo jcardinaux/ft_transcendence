@@ -10,7 +10,7 @@ import {showAllUseriInfo,
 		getFriends,
 		userStats,
 		allUserMathces} from "../controllers/profile.js"
-import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema } from "../schemas/utils.js"
+import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema } from "./utils.js"
 
 export const UsernameOpts = {
 	schema:{
