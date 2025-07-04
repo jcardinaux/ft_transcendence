@@ -17,6 +17,7 @@ import authRoutes from "./routes/auth.js"
 import  db from "../database/db.js"
 import profileRoute from './routes/profile.js'
 import matchesRoute from './routes/match.js'
+import frontendRoute from './routes/frontend.js'
 
 const httpOption = {
     key: readFileSync(resolve('certs', 'server.key')),
@@ -73,6 +74,10 @@ app.decorate('verifyJWT', async function (req, reply) {
     }
 })
 
+app.get('/api/test', async (request, reply) => {
+  return { message: 'API funzionante!' };
+});
+
 //cuore del server inizializza le rotte
 const start = async () => {
     try {
@@ -85,7 +90,7 @@ const start = async () => {
         await app.register(multipart)
         await app.register(fastifyStatic, {
             root: path.join(__dirname, '..', 'public'),
-            prefix: '/public/'
+            prefix: '/'
         })
         await app.register(fastifySwagger, {
             openapi: {
@@ -123,6 +128,7 @@ const start = async () => {
         await app.register(authRoutes, {prefix: '/auth'})
         await app.register(profileRoute, {prefix: '/profile'})
         await app.register(matchesRoute, {prefix: '/matches'})
+        await app.register(frontendRoute)
         await app.listen({port: app.config.FASTIFY_PORT, host: '0.0.0.0'})
     }
     catch (error) {
