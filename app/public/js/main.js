@@ -1,3 +1,4 @@
+import { clientLog, logTrace, logDebug, logInfo, logWarn, logError, logFatal } from './utils/logger.js';
 // Classe principale dell'applicazione
 class App {
     constructor() {
@@ -25,9 +26,11 @@ class App {
     }
     showWelcomeMessage() {
         console.log('App inizializzata con successo!');
+        logInfo('Application initialized successfully');
         this.showOutput('Applicazione caricata e pronta all\'uso!', 'success');
     }
     handlePrimaryClick() {
+        logDebug('Primary button clicked');
         this.showOutput('Hai cliccato il pulsante principale!', 'info');
         this.animateButton('btn-primary');
     }
@@ -37,13 +40,16 @@ class App {
     }
     async testApi() {
         try {
+            logDebug('Starting API test call', { endpoint: '/api/test' });
             this.showApiResult('Chiamata API in corso...', 'loading');
             const response = await fetch('/api/test');
             const data = await response.json();
+            logInfo('API test successful', { status: response.status, data });
             this.showApiResult(JSON.stringify(data, null, 2), 'success');
         }
         catch (error) {
             console.error('Errore API:', error);
+            logError('API test failed', { error: error instanceof Error ? error.message : error });
             this.showApiResult('Errore nella chiamata API', 'error');
         }
     }
@@ -168,26 +174,27 @@ class Utils {
         }
     }
 }
-export async function clientLog(level, message, context = {}) {
-    try {
-        await fetch('/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ level, message, context })
-        });
-    }
-    catch (err) {
-        console.error('Log sending failed:', err);
-    }
-}
-// Errori globali non catturati
-window.onerror = function (message, source, lineno, colno, error) {
-    clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
-        stack: error?.stack || null,
-        url: window.location.href,
-        userAgent: navigator.userAgent
-    });
-};
+// // Frontend Logger
+// type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+// export async function clientLog(level: LogLevel, message: string, context: Record<string, any> = {}) {
+//   try {
+//     await fetch('/log', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ level, message, context })
+//     });
+//   } catch (err) {
+//     console.error('Log sending failed:', err);
+//   }
+// }
+// // Errori globali non catturati
+// window.onerror = function (message, source, lineno, colno, error) {
+//   clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
+//     stack: error?.stack || null,
+//     url: window.location.href,
+//     userAgent: navigator.userAgent
+//   });
+// };
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
     new App();
@@ -196,10 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
 window.App = App;
 window.Utils = Utils;
 window.clientLog = clientLog;
-window.logTrace = (msg, ctx = {}) => clientLog('trace', msg, ctx);
-window.logDebug = (msg, ctx = {}) => clientLog('debug', msg, ctx);
-window.logInfo = (msg, ctx = {}) => clientLog('info', msg, ctx);
-window.logWarn = (msg, ctx = {}) => clientLog('warn', msg, ctx);
-window.logError = (msg, ctx = {}) => clientLog('error', msg, ctx);
-window.logFatal = (msg, ctx = {}) => clientLog('fatal', msg, ctx);
+window.logTrace = logTrace;
+window.logDebug = logDebug;
+window.logInfo = logInfo;
+window.logWarn = logWarn;
+window.logError = logError;
+window.logFatal = logFatal;
 //# sourceMappingURL=main.js.map

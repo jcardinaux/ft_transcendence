@@ -1,3 +1,13 @@
+import {
+  clientLog,
+  logTrace,
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
+  logFatal
+} from './utils/logger.js';
+
 // Interfacce TypeScript
 interface ApiResponse {
   message: string;
@@ -45,10 +55,12 @@ class App {
 
   private showWelcomeMessage(): void {
     console.log('App inizializzata con successo!');
+    logInfo('Application initialized successfully');
     this.showOutput('Applicazione caricata e pronta all\'uso!', 'success');
   }
 
   private handlePrimaryClick(): void {
+    logDebug('Primary button clicked');
     this.showOutput('Hai cliccato il pulsante principale!', 'info');
     this.animateButton('btn-primary');
   }
@@ -60,14 +72,17 @@ class App {
 
   private async testApi(): Promise<void> {
     try {
+      logDebug('Starting API test call', { endpoint: '/api/test' });
       this.showApiResult('Chiamata API in corso...', 'loading');
       
       const response = await fetch('/api/test');
       const data: ApiResponse = await response.json();
       
+      logInfo('API test successful', { status: response.status, data });
       this.showApiResult(JSON.stringify(data, null, 2), 'success');
     } catch (error) {
       console.error('Errore API:', error);
+      logError('API test failed', { error: error instanceof Error ? error.message : error });
       this.showApiResult('Errore nella chiamata API', 'error');
     }
   }
@@ -220,29 +235,9 @@ class Utils {
   }
 }
 
-// Frontend Logger
-type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+// // Frontend Logger
+// type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
-export async function clientLog(level: LogLevel, message: string, context: Record<string, any> = {}) {
-  try {
-    await fetch('/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level, message, context })
-    });
-  } catch (err) {
-    console.error('Log sending failed:', err);
-  }
-}
-
-// Errori globali non catturati
-window.onerror = function (message, source, lineno, colno, error) {
-  clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
-    stack: error?.stack || null,
-    url: window.location.href,
-    userAgent: navigator.userAgent
-  });
-};
 
 
 // Inizializza l'applicazione quando il DOM è pronto
@@ -253,10 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Esporta per uso globale se necessario
 (window as any).App = App;
 (window as any).Utils = Utils;
+
 (window as any).clientLog = clientLog;
-(window as any).logTrace = (msg: string, ctx = {}) => clientLog('trace', msg, ctx);
-(window as any).logDebug = (msg: string, ctx = {}) => clientLog('debug', msg, ctx);
-(window as any).logInfo  = (msg: string, ctx = {}) => clientLog('info', msg, ctx);
-(window as any).logWarn  = (msg: string, ctx = {}) => clientLog('warn', msg, ctx);
-(window as any).logError = (msg: string, ctx = {}) => clientLog('error', msg, ctx);
-(window as any).logFatal = (msg: string, ctx = {}) => clientLog('fatal', msg, ctx);
+(window as any).logTrace = logTrace;
+(window as any).logDebug = logDebug;
+(window as any).logInfo  = logInfo;
+(window as any).logWarn  = logWarn;
+(window as any).logError = logError;
+(window as any).logFatal = logFatal;

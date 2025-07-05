@@ -73,14 +73,14 @@ fastify.post("/log", async (req, reply) => {
 
 ### Core Logging Function
 
-TypeScript implementation in `main.ts`:
+TypeScript implementation in `public/ts/utils/logger.ts`:
 
 ```typescript
 type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export async function clientLog(
-  level: LogLevel, 
-  message: string, 
+  level: LogLevel,
+  message: string,
   context: Record<string, any> = {}
 ): Promise<void> {
   try {
@@ -89,56 +89,117 @@ export async function clientLog(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ level, message, context })
     });
-  } catch (error) {
-    console.error('Failed to send log to server:', error);
+  } catch (err) {
+    console.error('Log sending failed:', err);
+  }
+}
+
+// Shortcuts
+export const logTrace = (msg: string, ctx = {}) => clientLog('trace', msg, ctx);
+export const logDebug = (msg: string, ctx = {}) => clientLog('debug', msg, ctx);
+export const logInfo  = (msg: string, ctx = {}) => clientLog('info', msg, ctx);
+export const logWarn  = (msg: string, ctx = {}) => clientLog('warn', msg, ctx);
+export const logError = (msg: string, ctx = {}) => clientLog('error', msg, ctx);
+export const logFatal = (msg: string, ctx = {}) => clientLog('fatal', msg, ctx);
+```
+
+### Frontend Integration
+
+Implementation in `main.ts`:
+
+```typescript
+import {
+  clientLog,
+  logTrace,
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
+  logFatal
+} from './utils/logger.js';
+
+// Usage within application classes
+class App {
+  private showWelcomeMessage(): void {
+    logInfo('Application initialized successfully');
+    // ... rest of method
+  }
+
+  private handlePrimaryClick(): void {
+    logDebug('Primary button clicked');
+    // ... rest of method
+  }
+
+  private async testApi(): Promise<void> {
+    try {
+      logDebug('Starting API test call', { endpoint: '/api/test' });
+      const response = await fetch('/api/test');
+      logInfo('API test successful', { status: response.status, data });
+    } catch (error) {
+      logError('API test failed', { error: error instanceof Error ? error.message : error });
+    }
   }
 }
 ```
 
 ### Global Utility Functions
 
-Browser console accessibility:
+Browser console and runtime accessibility:
 
 ```typescript
-(window as any).logTrace = (msg: string, ctx = {}) => clientLog('trace', msg, ctx);
-(window as any).logDebug = (msg: string, ctx = {}) => clientLog('debug', msg, ctx);
-(window as any).logInfo  = (msg: string, ctx = {}) => clientLog('info', msg, ctx);
-(window as any).logWarn  = (msg: string, ctx = {}) => clientLog('warn', msg, ctx);
-(window as any).logError = (msg: string, ctx = {}) => clientLog('error', msg, ctx);
-(window as any).logFatal = (msg: string, ctx = {}) => clientLog('fatal', msg, ctx);
+(window as any).clientLog = clientLog;
+(window as any).logTrace = logTrace;
+(window as any).logDebug = logDebug;
+(window as any).logInfo  = logInfo;
+(window as any).logWarn  = logWarn;
+(window as any).logError = logError;
+(window as any).logFatal = logFatal;
 ```
 
 ## Usage Guidelines
 
 ### Frontend Logging
 
-Standard implementation pattern:
+Import and usage pattern:
 
 ```typescript
-// API call logging
-logDebug('Initiating API request', { 
-  endpoint: '/api/users',
-  method: 'GET',
-  timestamp: Date.now()
-});
+import { logInfo, logError, logDebug } from './utils/logger.js';
+
+// Application lifecycle logging
+logInfo('Application initialized successfully');
+
+// User interaction logging
+logDebug('Primary button clicked');
+
+// API call logging with context
+logDebug('Starting API test call', { endpoint: '/api/test' });
 
 try {
-  const response = await fetch('/api/users');
-  logInfo('API request successful', { 
-    status: response.status,
-    responseTime: Date.now() - startTime
-  });
-  
-  const data = await response.json();
-  return data;
+  const response = await fetch('/api/test');
+  logInfo('API test successful', { status: response.status, data });
 } catch (error) {
-  logError('API request failed', { 
-    error: error.message,
-    stack: error.stack,
-    endpoint: '/api/users'
+  logError('API test failed', { 
+    error: error instanceof Error ? error.message : error 
   });
-  throw error;
 }
+
+// Form submission with sanitized context
+logInfo('Form submitted', { 
+  name: data.name, 
+  email: data.email,
+  messageLength: data.message.length 
+});
+```
+
+### Browser Console Access
+
+Direct usage from DevTools:
+
+```javascript
+// Available globally on window object
+logInfo('Debug message from console');
+logError('Test error', { userId: 123 });
+clientLog('warn', 'Custom warning', { context: 'additional data' });
 ```
 
 ### Log Level Guidelines
@@ -182,13 +243,27 @@ app.setErrorHandler((error, request, reply) => {
 });
 ```
 
-## ELK Stack Integration
-
-### Data Flow Architecture
+## Project Structure
 
 ```
-Frontend (clientLog) → POST /log → Fastify/Pino → backend.log → Logstash → Elasticsearch → Kibana
+app/
+├── public/ts/
+│   ├── main.ts                 # Main application with integrated logging
+│   └── utils/
+│       └── logger.ts           # Frontend logging utilities
+├── src/
+│   └── routes/
+│       └── frontend.js         # Backend logging endpoint
+└── logs/
+    └── backend.log             # Structured log output
 ```
+
+### File Organization
+
+- **Frontend Logger**: `public/ts/utils/logger.ts` - Contains TypeScript logging functions
+- **Main Application**: `public/ts/main.ts` - Imports and uses logging throughout the app
+- **Backend Endpoint**: `src/routes/frontend.js` - Handles log reception from frontend
+- **Log Output**: `logs/backend.log` - JSON structured logs from both frontend and backend
 
 ### Log Format
 
@@ -237,3 +312,11 @@ context.responseTime:>1000
 - Context data should be serializable JSON
 - File rotation configured to prevent disk space issues
 - Network timeout handling for frontend log transmission
+
+## ELK Stack Integration
+
+### Data Flow Architecture
+
+```
+Frontend (clientLog) → POST /log → Fastify/Pino → backend.log → Logstash → Elasticsearch → Kibana
+```
