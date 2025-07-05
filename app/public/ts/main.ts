@@ -3,7 +3,7 @@ interface ApiResponse {
   message: string;
 }
 
-interface FormData {
+interface ContactFormData {
   name: string;
   email: string;
   message: string;
@@ -78,7 +78,18 @@ class App {
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     
-    const data: FormData = {
+    // const data: FormData = {
+    //   name: formData.get('name') as string,
+    //   email: formData.get('email') as string,
+    //   message: formData.get('message') as string
+    // };
+
+    // The TypeScript compiler is trying to use the browser's built-in
+    // FormData type (which has methods like append, delete, get, etc.)
+    // instead of your custom interface. Solution below:
+    // Rename custom interface to avoid the naming conflict
+
+    const data: ContactFormData = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       message: formData.get('message') as string
@@ -209,6 +220,31 @@ class Utils {
   }
 }
 
+// Frontend Logger
+type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+
+export async function clientLog(level: LogLevel, message: string, context: Record<string, any> = {}) {
+  try {
+    await fetch('/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level, message, context })
+    });
+  } catch (err) {
+    console.error('Log sending failed:', err);
+  }
+}
+
+// Errori globali non catturati
+window.onerror = function (message, source, lineno, colno, error) {
+  clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
+    stack: error?.stack || null,
+    url: window.location.href,
+    userAgent: navigator.userAgent
+  });
+};
+
+
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
   new App();
@@ -217,3 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Esporta per uso globale se necessario
 (window as any).App = App;
 (window as any).Utils = Utils;
+(window as any).clientLog = clientLog;
+(window as any).logTrace = (msg: string, ctx = {}) => clientLog('trace', msg, ctx);
+(window as any).logDebug = (msg: string, ctx = {}) => clientLog('debug', msg, ctx);
+(window as any).logInfo  = (msg: string, ctx = {}) => clientLog('info', msg, ctx);
+(window as any).logWarn  = (msg: string, ctx = {}) => clientLog('warn', msg, ctx);
+(window as any).logError = (msg: string, ctx = {}) => clientLog('error', msg, ctx);
+(window as any).logFatal = (msg: string, ctx = {}) => clientLog('fatal', msg, ctx);

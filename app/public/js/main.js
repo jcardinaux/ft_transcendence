@@ -1,4 +1,3 @@
-"use strict";
 // Classe principale dell'applicazione
 class App {
     constructor() {
@@ -52,6 +51,15 @@ class App {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
+        // const data: FormData = {
+        //   name: formData.get('name') as string,
+        //   email: formData.get('email') as string,
+        //   message: formData.get('message') as string
+        // };
+        // The TypeScript compiler is trying to use the browser's built-in
+        // FormData type (which has methods like append, delete, get, etc.)
+        // instead of your custom interface. Solution below:
+        // Rename custom interface to avoid the naming conflict
         const data = {
             name: formData.get('name'),
             email: formData.get('email'),
@@ -160,6 +168,26 @@ class Utils {
         }
     }
 }
+export async function clientLog(level, message, context = {}) {
+    try {
+        await fetch('/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level, message, context })
+        });
+    }
+    catch (err) {
+        console.error('Log sending failed:', err);
+    }
+}
+// Errori globali non catturati
+window.onerror = function (message, source, lineno, colno, error) {
+    clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
+        stack: error?.stack || null,
+        url: window.location.href,
+        userAgent: navigator.userAgent
+    });
+};
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
     new App();
@@ -167,4 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Esporta per uso globale se necessario
 window.App = App;
 window.Utils = Utils;
+window.clientLog = clientLog;
+window.logTrace = (msg, ctx = {}) => clientLog('trace', msg, ctx);
+window.logDebug = (msg, ctx = {}) => clientLog('debug', msg, ctx);
+window.logInfo = (msg, ctx = {}) => clientLog('info', msg, ctx);
+window.logWarn = (msg, ctx = {}) => clientLog('warn', msg, ctx);
+window.logError = (msg, ctx = {}) => clientLog('error', msg, ctx);
+window.logFatal = (msg, ctx = {}) => clientLog('fatal', msg, ctx);
 //# sourceMappingURL=main.js.map
