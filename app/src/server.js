@@ -9,7 +9,6 @@ import fastifyStatic from '@fastify/static'
 import { fileURLToPath } from 'url';
 import WebSocket from '@fastify/websocket'
 
-
 import path, {resolve} from 'node:path'
 import { readFileSync } from 'node:fs'
 
@@ -45,7 +44,35 @@ const schema = {
         }
     }
 }
-const app = fastify({logger:true, https: httpOption})
+
+//const app = fastify({logger:true, https: httpOption})
+// --- log ---
+const app = fastify({
+  logger: {
+    level: 'debug',
+    transport: {
+      targets: [
+        {
+          target: 'pino-pretty',
+          options: {
+            colorize: true
+          },
+          level: 'debug'
+        },
+        {
+          target: 'pino/file',
+          options: {
+            destination: './logs/back.log',
+            mkdir: true
+          },
+          level: 'debug'
+        }
+      ]
+    }
+  },
+  https: httpOption
+});
+// --- log end --
 
 // Allow all: HTTP/HTTPS
 await app.register(cors, {

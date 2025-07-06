@@ -1,4 +1,4 @@
-"use strict";
+import { clientLog, logTrace, logDebug, logInfo, logWarn, logError, logFatal } from './utils/logger.js';
 // Classe principale dell'applicazione
 class App {
     constructor() {
@@ -26,9 +26,11 @@ class App {
     }
     showWelcomeMessage() {
         console.log('App inizializzata con successo!');
+        logInfo('Application initialized successfully');
         this.showOutput('Applicazione caricata e pronta all\'uso!', 'success');
     }
     handlePrimaryClick() {
+        logDebug('Primary button clicked');
         this.showOutput('Hai cliccato il pulsante principale!', 'info');
         this.animateButton('btn-primary');
     }
@@ -38,13 +40,16 @@ class App {
     }
     async testApi() {
         try {
+            logDebug('Starting API test call', { endpoint: '/api/test' });
             this.showApiResult('Chiamata API in corso...', 'loading');
             const response = await fetch('/api/test');
             const data = await response.json();
+            logInfo('API test successful', { status: response.status, data });
             this.showApiResult(JSON.stringify(data, null, 2), 'success');
         }
         catch (error) {
             console.error('Errore API:', error);
+            logError('API test failed', { error: error instanceof Error ? error.message : error });
             this.showApiResult('Errore nella chiamata API', 'error');
         }
     }
@@ -52,6 +57,15 @@ class App {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
+        // const data: FormData = {
+        //   name: formData.get('name') as string,
+        //   email: formData.get('email') as string,
+        //   message: formData.get('message') as string
+        // };
+        // The TypeScript compiler is trying to use the browser's built-in
+        // FormData type (which has methods like append, delete, get, etc.)
+        // instead of your custom interface. Solution below:
+        // Rename custom interface to avoid the naming conflict
         const data = {
             name: formData.get('name'),
             email: formData.get('email'),
@@ -160,6 +174,8 @@ class Utils {
         }
     }
 }
+// // Frontend Logger
+// type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
     new App();
@@ -167,4 +183,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Esporta per uso globale se necessario
 window.App = App;
 window.Utils = Utils;
+window.clientLog = clientLog;
+window.logTrace = logTrace;
+window.logDebug = logDebug;
+window.logInfo = logInfo;
+window.logWarn = logWarn;
+window.logError = logError;
+window.logFatal = logFatal;
 //# sourceMappingURL=main.js.map

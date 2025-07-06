@@ -1,9 +1,19 @@
+import {
+  clientLog,
+  logTrace,
+  logDebug,
+  logInfo,
+  logWarn,
+  logError,
+  logFatal
+} from './utils/logger.js';
+
 // Interfacce TypeScript
 interface ApiResponse {
   message: string;
 }
 
-interface FormData {
+interface ContactFormData {
   name: string;
   email: string;
   message: string;
@@ -45,10 +55,12 @@ class App {
 
   private showWelcomeMessage(): void {
     console.log('App inizializzata con successo!');
+    logInfo('Application initialized successfully');
     this.showOutput('Applicazione caricata e pronta all\'uso!', 'success');
   }
 
   private handlePrimaryClick(): void {
+    logDebug('Primary button clicked');
     this.showOutput('Hai cliccato il pulsante principale!', 'info');
     this.animateButton('btn-primary');
   }
@@ -60,14 +72,17 @@ class App {
 
   private async testApi(): Promise<void> {
     try {
+      logDebug('Starting API test call', { endpoint: '/api/test' });
       this.showApiResult('Chiamata API in corso...', 'loading');
       
       const response = await fetch('/api/test');
       const data: ApiResponse = await response.json();
       
+      logInfo('API test successful', { status: response.status, data });
       this.showApiResult(JSON.stringify(data, null, 2), 'success');
     } catch (error) {
       console.error('Errore API:', error);
+      logError('API test failed', { error: error instanceof Error ? error.message : error });
       this.showApiResult('Errore nella chiamata API', 'error');
     }
   }
@@ -78,7 +93,18 @@ class App {
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     
-    const data: FormData = {
+    // const data: FormData = {
+    //   name: formData.get('name') as string,
+    //   email: formData.get('email') as string,
+    //   message: formData.get('message') as string
+    // };
+
+    // The TypeScript compiler is trying to use the browser's built-in
+    // FormData type (which has methods like append, delete, get, etc.)
+    // instead of your custom interface. Solution below:
+    // Rename custom interface to avoid the naming conflict
+
+    const data: ContactFormData = {
       name: formData.get('name') as string,
       email: formData.get('email') as string,
       message: formData.get('message') as string
@@ -209,6 +235,11 @@ class Utils {
   }
 }
 
+// // Frontend Logger
+// type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+
+
+
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
   new App();
@@ -217,3 +248,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // Esporta per uso globale se necessario
 (window as any).App = App;
 (window as any).Utils = Utils;
+
+(window as any).clientLog = clientLog;
+(window as any).logTrace = logTrace;
+(window as any).logDebug = logDebug;
+(window as any).logInfo  = logInfo;
+(window as any).logWarn  = logWarn;
+(window as any).logError = logError;
+(window as any).logFatal = logFatal;
