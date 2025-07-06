@@ -62,7 +62,7 @@ const app = fastify({
         {
           target: 'pino/file',
           options: {
-            destination: './logs/app.log',
+            destination: './logs/back.log',
             mkdir: true
           },
           level: 'debug'

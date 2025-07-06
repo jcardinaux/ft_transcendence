@@ -176,25 +176,6 @@ class Utils {
 }
 // // Frontend Logger
 // type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-// export async function clientLog(level: LogLevel, message: string, context: Record<string, any> = {}) {
-//   try {
-//     await fetch('/log', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ level, message, context })
-//     });
-//   } catch (err) {
-//     console.error('Log sending failed:', err);
-//   }
-// }
-// // Errori globali non catturati
-// window.onerror = function (message, source, lineno, colno, error) {
-//   clientLog('error', `Frontend error: ${message} at ${source}:${lineno}:${colno}`, {
-//     stack: error?.stack || null,
-//     url: window.location.href,
-//     userAgent: navigator.userAgent
-//   });
-// };
 // Inizializza l'applicazione quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
     new App();

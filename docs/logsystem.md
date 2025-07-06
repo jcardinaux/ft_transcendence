@@ -1,14 +1,23 @@
-# Logging System Arch
+# Logging System Architecture
 
 ## Overview
 
-This document describes the centralized logging system implementation for the ft_transcendence application, featuring structured logging across frontend and backend components with ELK stack integration.
+This document describes the dual logging system implementation for the ft_transcendence application, featuring separate log streams for backend operations and web client activities with structured logging and ELK stack integration.
+
+## Dual Logging Architecture
+
+The application implements a **dual logging system** with separate log files:
+
+- **Backend Log** (`logs/back.log`): Server operations, API calls, system events
+- **Client Log** (`logs/client.log`): Frontend activities, user interactions, client-side events
+
+This separation allows for better log analysis, debugging, and monitoring of different application layers.
 
 ## Backend Configuration
 
 ### Fastify Logger Setup
 
-The backend implements Pino logger through Fastify with dual output targets:
+The backend implements Pino logger through Fastify with dual output targets for backend operations:
 
 ```typescript
 const app = fastify({
@@ -16,15 +25,20 @@ const app = fastify({
     level: 'debug',
     transport: {
       targets: [
-        { 
-          target: 'pino-pretty', 
-          options: { colorize: true }, 
-          level: 'debug' 
+        {
+          target: 'pino-pretty',
+          options: {
+            colorize: true
+          },
+          level: 'debug'
         },
-        { 
-          target: 'pino/file', 
-          options: { destination: './logs/app.log', mkdir: true }, 
-          level: 'debug' 
+        {
+          target: 'pino/file',
+          options: {
+            destination: './logs/back.log',
+            mkdir: true
+          },
+          level: 'debug'
         }
       ]
     }
@@ -34,29 +48,46 @@ const app = fastify({
 ```
 
 **Features:**
-- JSON structured output to `./logs/app.log`
+- JSON structured output to `./logs/back.log`
 - Colorized console output for development
 - Native support for log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 - Automatic log file rotation and directory creation
 
+### Web Client Logger
+
+Separate logger instance for frontend log messages:
+
+```javascript
+import pino from 'pino';
+
+const webClientLogger = pino(
+  { level: 'debug' },
+  pino.destination({ dest: './logs/client.log', mkdir: true })
+);
+```
+
+**Purpose:**
+- Dedicated logging for client-side events
+- Writes to separate `client.log` file
+- Maintains same log level support as backend logger
+
 ### HTTP Log Endpoint
 
-Implementation in `frontend.js` routes:
+Implementation in `routes/frontend.js`:
 
-```typescript
+```javascript
 fastify.post("/log", async (req, reply) => {
-  const { 
-    level = 'info', 
-    message = "No message provided", 
-    context = {} 
-  } = await req.body;
+  const body = await req.body;
 
-  const validLevels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
-  
-  if (validLevels.includes(level) && typeof fastify.log[level] === 'function') {
-    fastify.log[level]({ context }, message);
+  const message = body?.message || "No message provided";
+  const level = body?.level || "info";
+  const context = body?.context || {};
+
+  const levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+  if (levels.includes(level) && typeof webClientLogger[level] === 'function') {
+    webClientLogger[level]({ context }, message);  // writes to client.log
   } else {
-    fastify.log.error({ context }, `Invalid log level: ${level} — ${message}`);
+    fastify.log.error({ context }, `Unknown log level: ${level} — ${message}`);
   }
 
   return reply.send({ status: "ok" });
@@ -64,10 +95,11 @@ fastify.post("/log", async (req, reply) => {
 ```
 
 **Capabilities:**
-- Accepts structured log data from any HTTP client
+- Accepts structured log data from frontend clients
+- Routes client logs to dedicated `client.log` file via `webClientLogger`
+- Backend errors still logged to `back.log` via `fastify.log`
 - Validates log levels before processing
 - Preserves context metadata in log entries
-- Returns standardized response format
 
 ## Frontend Implementation
 
@@ -252,22 +284,42 @@ app/
 │   └── utils/
 │       └── logger.ts           # Frontend logging utilities
 ├── src/
+│   ├── logger/
+│   │   └── webClientLogger.js  # Dedicated client logger instance
 │   └── routes/
 │       └── frontend.js         # Backend logging endpoint
 └── logs/
-    └── app.log             # Structured log output
+    ├── back.log                # Backend operations log
+    └── client.log              # Frontend activities log
 ```
-c
+
 ### File Organization
 
 - **Frontend Logger**: `public/ts/utils/logger.ts` - Contains TypeScript logging functions
 - **Main Application**: `public/ts/main.ts` - Imports and uses logging throughout the app
+- **Web Client Logger**: `src/logger/webClientLogger.js` - Dedicated Pino instance for client logs
 - **Backend Endpoint**: `src/routes/frontend.js` - Handles log reception from frontend
-- **Log Output**: `app.log` - JSON structured logs from both frontend and backend
+- **Log Outputs**: 
+  - `logs/back.log` - Backend operations, server events, API calls
+  - `logs/client.log` - Frontend activities, user interactions, client-side events
 
 ### Log Format
 
-Standard JSON structure in `app.log`:
+**Backend Log** (`logs/back.log`) - Server operations:
+
+```json
+{
+  "level": 30,
+  "time": 1625140800000,
+  "pid": 12345,
+  "hostname": "server-01",
+  "msg": "Health check requested",
+  "clientIP": "192.168.1.100",
+  "userAgent": "Mozilla/5.0..."
+}
+```
+
+**Client Log** (`logs/client.log`) - Frontend activities:
 
 ```json
 {
@@ -276,33 +328,52 @@ Standard JSON structure in `app.log`:
   "pid": 12345,
   "hostname": "server-01",
   "context": {
-    "userId": "user123",
-    "sessionId": "sess456",
+    "endpoint": "/api/test",
+    "status": 200,
     "source": "frontend"
   },
-  "msg": "User authentication successful"
+  "msg": "API test successful"
 }
 ```
 
 ### Kibana Query Examples
 
-Common search patterns:
+Common search patterns for dual log system:
 
+**Backend Operations** (`back.log`):
 ```
-# Error logs from last hour
-level:error AND time:[now-1h TO now]
+# Server errors in backend
+level:error AND filename:back.log
 
-# Frontend-specific logs
-context.source:frontend
+# API endpoint performance
+msg:*"Health check"* AND filename:back.log
 
-# User-specific activity
-context.userId:"user123"
+# Backend system events
+hostname:"server-01" AND filename:back.log
+```
 
-# API endpoint monitoring
-msg:*"/api/users"* AND level:>=warn
+**Frontend Activities** (`client.log`):
+```
+# Client-side errors
+level:error AND filename:client.log
+
+# User interactions
+context.source:frontend AND filename:client.log
+
+# API calls from frontend
+msg:*"API test"* AND filename:client.log
 
 # Performance monitoring
-context.responseTime:>1000
+context.responseTime:>1000 AND filename:client.log
+```
+
+**Cross-System Analysis**:
+```
+# All errors across both systems
+level:error
+
+# Specific time range analysis
+time:[now-1h TO now] AND (filename:back.log OR filename:client.log)
 ```
 
 ## Performance Considerations
@@ -317,6 +388,16 @@ context.responseTime:>1000
 
 ### Data Flow Architecture
 
+**Dual Stream Processing**:
+
 ```
-Frontend (clientLog) → POST /log → Fastify/Pino → app.log → Logstash → Elasticsearch → Kibana
+Frontend (clientLog) → POST /log → webClientLogger → client.log → Logstash → Elasticsearch → Kibana
+Backend (fastify.log) → Pino Transport → back.log → Logstash → Elasticsearch → Kibana
 ```
+
+**Benefits of Dual Logging**:
+- **Separation of Concerns**: Clear distinction between client and server events
+- **Targeted Analysis**: Filter logs by source (frontend vs backend)
+- **Performance Monitoring**: Compare client-side vs server-side performance
+- **Debugging Efficiency**: Isolate issues to specific application layers
+- **Scalable Architecture**: Independent log rotation and retention policies
