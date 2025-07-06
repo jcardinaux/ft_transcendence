@@ -23,7 +23,7 @@ const app = fastify({
         },
         { 
           target: 'pino/file', 
-          options: { destination: './logs/backend.log', mkdir: true }, 
+          options: { destination: './logs/app.log', mkdir: true }, 
           level: 'debug' 
         }
       ]
@@ -34,7 +34,7 @@ const app = fastify({
 ```
 
 **Features:**
-- JSON structured output to `./logs/backend.log`
+- JSON structured output to `./logs/app.log`
 - Colorized console output for development
 - Native support for log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 - Automatic log file rotation and directory creation
@@ -255,19 +255,19 @@ app/
 │   └── routes/
 │       └── frontend.js         # Backend logging endpoint
 └── logs/
-    └── backend.log             # Structured log output
+    └── app.log             # Structured log output
 ```
-
+c
 ### File Organization
 
 - **Frontend Logger**: `public/ts/utils/logger.ts` - Contains TypeScript logging functions
 - **Main Application**: `public/ts/main.ts` - Imports and uses logging throughout the app
 - **Backend Endpoint**: `src/routes/frontend.js` - Handles log reception from frontend
-- **Log Output**: `logs/backend.log` - JSON structured logs from both frontend and backend
+- **Log Output**: `app.log` - JSON structured logs from both frontend and backend
 
 ### Log Format
 
-Standard JSON structure in `backend.log`:
+Standard JSON structure in `app.log`:
 
 ```json
 {
@@ -318,5 +318,5 @@ context.responseTime:>1000
 ### Data Flow Architecture
 
 ```
-Frontend (clientLog) → POST /log → Fastify/Pino → backend.log → Logstash → Elasticsearch → Kibana
+Frontend (clientLog) → POST /log → Fastify/Pino → app.log → Logstash → Elasticsearch → Kibana
 ```
