@@ -1,3 +1,5 @@
+import fs from 'fs';
+fs.mkdirSync('./logs', { recursive: true });
 import fastify from 'fastify'
 import cors from '@fastify/cors'
 import fastifySwagger from '@fastify/swagger'
@@ -26,7 +28,7 @@ const httpOption = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//env importer
+// .env import
 const schema = {
     type: 'object',
     required: ['FASTIFY_PORT', 'JWT_SECRET', 'NODE_ENV'],
@@ -62,8 +64,9 @@ const app = fastify({
         {
           target: 'pino/file',
           options: {
-            destination: './logs/back.log',
-            mkdir: true
+            destination: './logs/server.log',
+            mkdir: true,
+            sync: true
           },
           level: 'debug'
         }

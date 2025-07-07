@@ -1,13 +1,15 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: elk-elasticsearch
     environment:
       - node.name=elasticsearch
       - cluster.name=docker-cluster
       - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-changeme}
       - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
+      - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
       - xpack.security.transport.ssl.enabled=false
       - xpack.license.self_generated.type=basic
@@ -18,18 +20,20 @@ services:
         hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elk/elasticsearch/scripts:/scripts
     ports:
       - "9200:9200"
     networks:
       - elk-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      test: ["CMD-SHELL", "/scripts/healthcheck-es.sh"]
       interval: 10s
       timeout: 10s
       retries: 30
+    entrypoint: ["/bin/bash", "-c", "/scripts/entrypoint-es.sh"]
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.9.0
+    image: docker.elastic.co/kibana/kibana:8.15.0
     container_name: elk-kibana
     depends_on:
       elasticsearch:
@@ -37,33 +41,43 @@ services:
     environment:
       - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY:-a7s2k9d8f7h6j5k4l3m2n1b9v8c7x6z5}
-      - XPACK_REPORTING_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY:-a7s2k9d8f7h6j5k4l3m2n1b9v8c7x6z5}
-      - XPACK_SECURITY_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY:-a7s2k9d8f7h6j5k4l3m2n1b9v8c7x6z5}
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     volumes:
       - kibana-data:/usr/share/kibana/data
+      - ./elk/kibana/scripts:/scripts
     ports:
       - "5601:5601"
     networks:
       - elk-net
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"overall\":{\"level\":\"available\"'"]
+      test: ["CMD-SHELL", "/scripts/healthcheck-kibana.sh"]
       interval: 10s
       timeout: 10s
       retries: 30
+    restart: on-failure
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.9.0
+    image: docker.elastic.co/logstash/logstash:8.15.0
     container_name: elk-logstash
+    entrypoint: ["/scripts/entrypoint-ls.sh"]
     depends_on:
       elasticsearch:
         condition: service_healthy
     volumes:
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./app/logs:/logs:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./elk/logstash/config:/usr/share/logstash/config
+      - ./elk/logstash/scripts:/scripts
+      - ./app/logs:/logs
+      - logstash-data:/usr/share/logstash/data
     environment:
-      - LS_JAVA_OPTS=-Xms500m -Xmx500m
-      - xpack.monitoring.enabled=false
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_USER=elastic
+      - ES_PASS=${ELASTIC_PASSWORD}
+      - PIPELINE_WORKERS=2
+    ports:
+      - "5044:5044"
     networks:
       - elk-net
     restart: unless-stopped
@@ -75,3 +89,4 @@ networks:
 volumes:
   elasticsearch-data:
   kibana-data:
+  logstash-data:

@@ -8,7 +8,7 @@ This document describes the dual logging system implementation for the ft_transc
 
 The application implements a **dual logging system** with separate log files:
 
-- **Backend Log** (`logs/back.log`): Server operations, API calls, system events
+- **Backend Log** (`logs/server.log`): Server operations, API calls, system events
 - **Client Log** (`logs/client.log`): Frontend activities, user interactions, client-side events
 
 This separation allows for better log analysis, debugging, and monitoring of different application layers.
@@ -35,7 +35,7 @@ const app = fastify({
         {
           target: 'pino/file',
           options: {
-            destination: './logs/back.log',
+            destination: './logs/server.log',
             mkdir: true
           },
           level: 'debug'
@@ -48,7 +48,7 @@ const app = fastify({
 ```
 
 **Features:**
-- JSON structured output to `./logs/back.log`
+- JSON structured output to `./logs/server.log`
 - Colorized console output for development
 - Native support for log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 - Automatic log file rotation and directory creation
@@ -97,7 +97,7 @@ fastify.post("/log", async (req, reply) => {
 **Capabilities:**
 - Accepts structured log data from frontend clients
 - Routes client logs to dedicated `client.log` file via `webClientLogger`
-- Backend errors still logged to `back.log` via `fastify.log`
+- Backend errors still logged to `server.log` via `fastify.log`
 - Validates log levels before processing
 - Preserves context metadata in log entries
 
@@ -289,7 +289,7 @@ app/
 │   └── routes/
 │       └── frontend.js         # Backend logging endpoint
 └── logs/
-    ├── back.log                # Backend operations log
+    ├── server.log                # Backend operations log
     └── client.log              # Frontend activities log
 ```
 
@@ -300,12 +300,12 @@ app/
 - **Web Client Logger**: `src/logger/webClientLogger.js` - Dedicated Pino instance for client logs
 - **Backend Endpoint**: `src/routes/frontend.js` - Handles log reception from frontend
 - **Log Outputs**: 
-  - `logs/back.log` - Backend operations, server events, API calls
+  - `logs/server.log` - Backend operations, server events, API calls
   - `logs/client.log` - Frontend activities, user interactions, client-side events
 
 ### Log Format
 
-**Backend Log** (`logs/back.log`) - Server operations:
+**Backend Log** (`logs/server.log`) - Server operations:
 
 ```json
 {
@@ -340,16 +340,16 @@ app/
 
 Common search patterns for dual log system:
 
-**Backend Operations** (`back.log`):
+**Backend Operations** (`server.log`):
 ```
 # Server errors in backend
-level:error AND filename:back.log
+level:error AND filename:server.log
 
 # API endpoint performance
-msg:*"Health check"* AND filename:back.log
+msg:*"Health check"* AND filename:server.log
 
 # Backend system events
-hostname:"server-01" AND filename:back.log
+hostname:"server-01" AND filename:server.log
 ```
 
 **Frontend Activities** (`client.log`):
@@ -373,7 +373,7 @@ context.responseTime:>1000 AND filename:client.log
 level:error
 
 # Specific time range analysis
-time:[now-1h TO now] AND (filename:back.log OR filename:client.log)
+time:[now-1h TO now] AND (filename:server.log OR filename:client.log)
 ```
 
 ## Performance Considerations
@@ -392,7 +392,7 @@ time:[now-1h TO now] AND (filename:back.log OR filename:client.log)
 
 ```
 Frontend (clientLog) → POST /log → webClientLogger → client.log → Logstash → Elasticsearch → Kibana
-Backend (fastify.log) → Pino Transport → back.log → Logstash → Elasticsearch → Kibana
+Backend (fastify.log) → Pino Transport → server.log → Logstash → Elasticsearch → Kibana
 ```
 
 **Benefits of Dual Logging**:
