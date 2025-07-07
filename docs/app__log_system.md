@@ -19,7 +19,7 @@ This separation allows for better log analysis, debugging, and monitoring of dif
 
 The backend implements Pino logger through Fastify with dual output targets for backend operations:
 
-```typescript
+```javascript
 const app = fastify({
   logger: {
     level: 'debug',
@@ -36,7 +36,8 @@ const app = fastify({
           target: 'pino/file',
           options: {
             destination: './logs/server.log',
-            mkdir: true
+            mkdir: true,
+            sync: true
           },
           level: 'debug'
         }
@@ -52,46 +53,72 @@ const app = fastify({
 - Colorized console output for development
 - Native support for log levels: `trace`, `debug`, `info`, `warn`, `error`, `fatal`
 - Automatic log file rotation and directory creation
+- Synchronous file writing for immediate log visibility
 
 ### Web Client Logger
 
-Separate logger instance for frontend log messages:
+Separate logger instance for frontend log messages in `src/logger/webClientLogger.js`:
 
 ```javascript
+import fs from 'fs';
+fs.mkdirSync('./logs', { recursive: true });
 import pino from 'pino';
 
-const webClientLogger = pino(
-  { level: 'debug' },
-  pino.destination({ dest: './logs/client.log', mkdir: true })
-);
+const webClientLogger = pino({
+  level: 'debug',
+  formatters: {
+    level(label) {
+      return { level: label };  // output consistent with Fastify JSON
+    }
+  },
+  timestamp: pino.stdTimeFunctions.epochTime  // 'time' in ms
+}, pino.destination({
+  dest: './logs/client.log',
+  mkdir: true,
+  sync: true  // for immediate flush (useful for test/debug live log tailing)
+}));
+
+export default webClientLogger;
 ```
 
 **Purpose:**
 - Dedicated logging for client-side events
 - Writes to separate `client.log` file
-- Maintains same log level support as backend logger
+- Enhanced formatting consistency with backend logger
+- Synchronous writing for immediate log visibility during development
+- Automatic directory creation and log rotation
 
 ### HTTP Log Endpoint
 
-Implementation in `routes/frontend.js`:
+Implementation in `src/routes/frontend.js`:
 
 ```javascript
-fastify.post("/log", async (req, reply) => {
-  const body = await req.body;
+import webClientLogger from '../logger/webClientLogger.js';
 
-  const message = body?.message || "No message provided";
-  const level = body?.level || "info";
-  const context = body?.context || {};
+async function frontendRoute(fastify, options) {
+  fastify.get("/", (req, reply) => {
+    return reply.sendFile('index.html');
+  });
 
-  const levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
-  if (levels.includes(level) && typeof webClientLogger[level] === 'function') {
-    webClientLogger[level]({ context }, message);  // writes to client.log
-  } else {
-    fastify.log.error({ context }, `Unknown log level: ${level} — ${message}`);
-  }
+  fastify.post("/log", async (req, reply) => {
+    const body = await req.body;
 
-  return reply.send({ status: "ok" });
-});
+    const message = body?.message || "No message provided";
+    const level = body?.level || "info";
+    const context = body?.context || {};
+
+    const levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+    if (levels.includes(level) && typeof webClientLogger[level] === 'function') {
+      webClientLogger[level]({ context }, message);  // writes to client.log
+    } else {
+      fastify.log.error({ context }, `Unknown log level: ${level} — ${message}`);
+    }
+
+    return reply.send({ status: "ok" });
+  });
+}
+
+export default frontendRoute;
 ```
 
 **Capabilities:**
@@ -135,9 +162,16 @@ export const logError = (msg: string, ctx = {}) => clientLog('error', msg, ctx);
 export const logFatal = (msg: string, ctx = {}) => clientLog('fatal', msg, ctx);
 ```
 
+**Features:**
+- Clean TypeScript interface with proper typing
+- Asynchronous log transmission to prevent UI blocking
+- Error handling for network failures
+- Convenient shortcut functions for each log level
+- Structured context data support
+
 ### Frontend Integration
 
-Implementation in `main.ts`:
+Implementation in `public/ts/main.ts`:
 
 ```typescript
 import {
@@ -154,21 +188,28 @@ import {
 class App {
   private showWelcomeMessage(): void {
     logInfo('Application initialized successfully');
-    // ... rest of method
+    this.showOutput('Applicazione caricata e pronta all\'uso!', 'success');
   }
 
   private handlePrimaryClick(): void {
     logDebug('Primary button clicked');
-    // ... rest of method
+    this.showOutput('Hai cliccato il pulsante principale!', 'info');
+    this.animateButton('btn-primary');
   }
 
   private async testApi(): Promise<void> {
     try {
       logDebug('Starting API test call', { endpoint: '/api/test' });
+      this.showApiResult('Chiamata API in corso...', 'loading');
+      
       const response = await fetch('/api/test');
+      const data: ApiResponse = await response.json();
+      
       logInfo('API test successful', { status: response.status, data });
+      this.showApiResult(JSON.stringify(data, null, 2), 'success');
     } catch (error) {
       logError('API test failed', { error: error instanceof Error ? error.message : error });
+      this.showApiResult('Errore nella chiamata API', 'error');
     }
   }
 }
@@ -249,7 +290,7 @@ clientLog('warn', 'Custom warning', { context: 'additional data' });
 
 Direct logger usage:
 
-```typescript
+```javascript
 // Request-scoped logging
 app.get('/api/health', async (request, reply) => {
   request.log.info('Health check requested', { 
@@ -258,6 +299,12 @@ app.get('/api/health', async (request, reply) => {
   });
   
   return { status: 'healthy', timestamp: new Date().toISOString() };
+});
+
+// API endpoint implementation
+app.get('/api/test', async (request, reply) => {
+  request.log.debug('API test endpoint called');
+  return { message: 'API funzionante!' };
 });
 
 // Global error handling
@@ -284,12 +331,13 @@ app/
 │   └── utils/
 │       └── logger.ts           # Frontend logging utilities
 ├── src/
+│   ├── server.js               # Backend Fastify server with Pino configuration
 │   ├── logger/
 │   │   └── webClientLogger.js  # Dedicated client logger instance
 │   └── routes/
 │       └── frontend.js         # Backend logging endpoint
 └── logs/
-    ├── server.log                # Backend operations log
+    ├── server.log              # Backend operations log
     └── client.log              # Frontend activities log
 ```
 
@@ -299,6 +347,7 @@ app/
 - **Main Application**: `public/ts/main.ts` - Imports and uses logging throughout the app
 - **Web Client Logger**: `src/logger/webClientLogger.js` - Dedicated Pino instance for client logs
 - **Backend Endpoint**: `src/routes/frontend.js` - Handles log reception from frontend
+- **Backend Server**: `src/server.js` - Fastify server with dual-target Pino configuration
 - **Log Outputs**: 
   - `logs/server.log` - Backend operations, server events, API calls
   - `logs/client.log` - Frontend activities, user interactions, client-side events
@@ -379,10 +428,12 @@ time:[now-1h TO now] AND (filename:server.log OR filename:client.log)
 ## Performance Considerations
 
 - Asynchronous logging prevents UI blocking
+- Synchronous file writing ensures immediate log visibility during development
 - Log batching recommended for high-frequency events
 - Context data should be serializable JSON
 - File rotation configured to prevent disk space issues
 - Network timeout handling for frontend log transmission
+- Enhanced error handling for failed log submissions
 
 ## ELK Stack Integration
 
