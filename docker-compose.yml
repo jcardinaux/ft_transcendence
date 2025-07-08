@@ -1,12 +1,18 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: elk-elasticsearch
     environment:
+      - node.name=elasticsearch
+      - cluster.name=docker-cluster
       - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-changeme}
+      - bootstrap.memory_lock=true
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=false
-      - ELASTIC_PASSWORD=changeme
+      - xpack.security.transport.ssl.enabled=false
+      - xpack.license.self_generated.type=basic
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ulimits:
       memlock:
@@ -14,41 +20,67 @@ services:
         hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elk/elasticsearch/scripts:/scripts
     ports:
       - "9200:9200"
     networks:
       - elk-net
+    healthcheck:
+      test: ["CMD-SHELL", "/scripts/healthcheck-es.sh"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    entrypoint: ["/bin/bash", "-c", "/scripts/entrypoint-es.sh"]
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.9.0
+    image: docker.elastic.co/kibana/kibana:8.15.0
     container_name: elk-kibana
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     environment:
-      - ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=changeme
-      - SERVER_PUBLICBASEURL=http://localhost:5601
-      - SERVER_NAME=fttranscendence-kibana
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+      - ./elk/kibana/scripts:/scripts
     ports:
       - "5601:5601"
     networks:
       - elk-net
+    healthcheck:
+      test: ["CMD-SHELL", "/scripts/healthcheck-kibana.sh"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+    restart: on-failure
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.9.0
+    image: docker.elastic.co/logstash/logstash:8.15.0
     container_name: elk-logstash
+    entrypoint: ["/scripts/entrypoint-ls.sh"]
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     volumes:
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-      - ./app/logs:/logs:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./elk/logstash/config:/usr/share/logstash/config
+      - ./elk/logstash/scripts:/scripts
+      - ./app/logs:/logs
+      - logstash-data:/usr/share/logstash/data
     environment:
-      - LS_JAVA_OPTS=-Xms500m -Xmx500m
-      - xpack.monitoring.elasticsearch.username=elastic
-      - xpack.monitoring.elasticsearch.password=changeme
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_USER=elastic
+      - ES_PASS=${ELASTIC_PASSWORD}
+      - PIPELINE_WORKERS=2
+    ports:
+      - "5044:5044"
     networks:
       - elk-net
+    restart: unless-stopped
 
 networks:
   elk-net:
@@ -56,3 +88,5 @@ networks:
 
 volumes:
   elasticsearch-data:
+  kibana-data:
+  logstash-data:
