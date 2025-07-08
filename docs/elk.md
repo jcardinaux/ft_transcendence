@@ -4,21 +4,21 @@
 
 **Major module: Infrastructure Setup with ELK (Elasticsearch, Logstash, Kibana) for Log Management.**
 
-The objective of this major module is to establish a robust infrastructure for log management and analysis using the ELK stack (Elasticsearch, Logstash, Kibana). Key features and goals include:
+Objective: infrastructure for log management and analysis using the ELK stack (Elasticsearch, Logstash, Kibana). Key features and goals include:
 
-- Deploy Elasticsearch to efficiently store and index log data, ensuring it is easily searchable and accessible.
+- Deploy Elasticsearch to store and index log data, making it searchable and accessible.
 - Configure Logstash to collect, process, and transform log data from various sources, sending it to Elasticsearch.
 - Set up Kibana for visualizing log data, creating dashboards, and generating insights from log events.
 - Define data retention and archiving policies to manage log data storage effectively.
 - Implement security measures to protect log data and access to the ELK stack components.
 
-This major module aims to establish a powerful log management and analysis system using the ELK stack, enabling effective troubleshooting, monitoring, and insights into the system's operation and performance.
+ELK stack log management and analysis system for troubleshooting, monitoring, and system operation insights.
 
 ## Current Status
 
 ### Completed Implementation
 
-**Deploy Elasticsearch to efficiently store and index log data, ensuring it is easily searchable and accessible** - COMPLETED
+**Deploy Elasticsearch to store and index log data, making it searchable and accessible** - COMPLETED
 - Elasticsearch 8.15.0 deployed with Docker containerization
 - Index template configured for fttranscendence-logs with optimized field mappings
 - Daily index rotation pattern implemented (fttranscendence-logs-YYYY.MM.dd)
@@ -29,7 +29,7 @@ This major module aims to establish a powerful log management and analysis syste
 - Logstash 8.15.0 pipeline configured for dual log source processing
 - Real-time monitoring of server.log (backend) and client.log (frontend)
 - JSON codec parsing with ECS-compliant field targeting
-- Comprehensive filter pipeline for data transformation and enrichment
+- Filter pipeline for data transformation and enrichment
 - Service tagging and timestamp normalization implemented
 - Authenticated output to Elasticsearch with proper indexing
 
@@ -92,13 +92,13 @@ This major module aims to establish a powerful log management and analysis syste
 
 **Production Readiness**: PARTIAL
 - Complete: Core infrastructure, security foundation, data processing
-- Pending: ILM policies, production dashboards, advanced monitoring, SSL/TLS implementation
+- Pending: ILM policies, production dashboards, monitoring, SSL/TLS implementation
 
 ---
 
 ## Architecture Overview
 
-The ELK stack implementation consists of three containerized services orchestrated by Docker Compose, providing comprehensive log aggregation, processing, and visualization capabilities for the ft_transcendence application.
+ELK stack implementation: three containerized services orchestrated by Docker Compose for log aggregation, processing, and visualization for ft_transcendence application.
 
 ### System Components
 
@@ -158,7 +158,7 @@ ulimits:
 **Memory Management:**
 - JVM heap size set to 1GB (adjustable based on system resources)
 - Memory lock enabled to prevent swapping
-- Unlimited memory lock limits for optimal performance
+- Unlimited memory lock limits for performance
 
 ### Index Template Configuration
 
@@ -211,7 +211,7 @@ curl -s -u "elastic:$ELASTIC_PASSWORD" "http://localhost:9200/_cluster/health" |
 
 ### Input Configuration
 
-Dual file input sources for comprehensive log collection:
+Dual file input sources for log collection:
 
 ```ruby
 input {
@@ -260,7 +260,7 @@ input {
 
 ### Filter Pipeline
 
-Comprehensive data transformation and enrichment:
+Data transformation and enrichment:
 
 ```ruby
 filter {
@@ -343,7 +343,7 @@ output {
 ```
 
 **Output Features:**
-- Daily index rotation for efficient data management
+- Daily index rotation for data management
 - Authenticated connections using environment variables
 - Document ID based on content fingerprint for upsert operations
 - Debug output for development monitoring
@@ -546,7 +546,7 @@ echo "KIBANA_ENCRYPTION_KEY=$KIBANA_ENCRYPTION_KEY" >> .env
 2. **Storage Optimization**:
    - Document deduplication via SHA256 fingerprinting
    - Field cleanup to reduce storage overhead
-   - Keyword mapping for efficient aggregations
+   - Keyword mapping for aggregations
 
 3. **Volume Management**:
    ```yaml
@@ -743,6 +743,6 @@ echo "KIBANA_ENCRYPTION_KEY=$KIBANA_ENCRYPTION_KEY" >> .env
 
 ## Conclusion
 
-The ELK stack implementation provides a comprehensive log management solution for the ft_transcendence application, offering real-time log ingestion, powerful search capabilities, and flexible visualization options. The dual-log architecture enables separate analysis of backend and frontend activities while maintaining centralized storage and unified access through Kibana dashboards.
+ELK stack implementation: log management solution for ft_transcendence application with real-time log ingestion, search capabilities, and visualization options. Dual-log architecture for separate backend and frontend analysis with centralized storage and unified Kibana access.
 
-The current implementation serves as a solid foundation for development and testing environments, with clear pathways for production deployment and scaling. Regular monitoring, maintenance, and security updates will ensure optimal performance and data integrity as the system evolves.
+Foundation for development and testing environments with clear pathways for production deployment and scaling. Regular monitoring, maintenance, and security updates required for performance and data integrity.

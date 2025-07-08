@@ -2,22 +2,22 @@
 
 ## Overview
 
-This document describes the dual logging system implementation for the ft_transcendence application, featuring separate log streams for backend operations and web client activities with structured logging and ELK stack integration.
+Dual logging system implementation for ft_transcendence application. Separate log streams for backend operations and web client activities with structured logging and ELK stack integration.
 
 ## Dual Logging Architecture
 
-The application implements a **dual logging system** with separate log files:
+**Dual logging system** with separate log files:
 
 - **Backend Log** (`logs/server.log`): Server operations, API calls, system events
 - **Client Log** (`logs/client.log`): Frontend activities, user interactions, client-side events
 
-This separation allows for better log analysis, debugging, and monitoring of different application layers.
+Separation improves log analysis, debugging, and monitoring of different application layers.
 
 ## Backend Configuration
 
 ### Fastify Logger Setup
 
-The backend implements Pino logger through Fastify with dual output targets for backend operations:
+Pino logger through Fastify with dual output targets for backend operations:
 
 ```javascript
 const app = fastify({
@@ -428,7 +428,7 @@ time:[now-1h TO now] AND (filename:server.log OR filename:client.log)
 ## Performance Considerations
 
 - Asynchronous logging prevents UI blocking
-- Synchronous file writing ensures immediate log visibility during development
+- Synchronous file writing for immediate log visibility during development
 - Log batching recommended for high-frequency events
 - Context data should be serializable JSON
 - File rotation configured to prevent disk space issues
