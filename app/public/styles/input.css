@@ -2,9 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Le tue classi custom qui */
+/*classi tailwind personalizzate  */
+
+body {
+  /* Ora usiamo le classi definite in tailwind.config.js */
+  @apply bg-win98-bg font-win98;
+}
+
+.win98-border-light {
+  /* @apply per i bordi */
+  @apply border-t-2 border-l-2 border-r-2 border-b-2
+         border-t-white border-l-white border-r-win98-gray-medium border-b-win98-gray-medium;
+}
+
+.win98-border-dark {
+  /* @apply per i bordi */
+  @apply border-t-2 border-l-2 border-r-2 border-b-2
+         border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
+}
+
+.win98-title-gradient {
+  /* I gradienti CSS non possono essere mappati direttamente con @apply da classi Tailwind predefinite.
+     Quindi, questa rimane una regola CSS standard. */
+  background: linear-gradient(to right, theme('colors.win98-blue-dark'), theme('colors.win98-blue-light'));
+}
+
+.btn-win98-active:active {
+  /* Qui usiamo @apply per i colori dei bordi e padding diretti */
+  @apply pt-[5px] pl-[13px] pr-[11px] pb-[3px] /* Valori arbitrari per il padding */
+         border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
+}
+
+/* Esempio di un componente che potresti voler definire qui */
 @layer components {
-  .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+  .btn-win98 {
+    @apply bg-win98-gray-light border-2 border-solid win98-border-light
+           px-4 py-1.5 font-normal cursor-pointer text-shadow-win98
+           btn-win98-active; /* Applichiamo anche la classe per lo stato attivo */
+  }
+
+  .window-frame-win98 {
+    @apply bg-win98-gray-light border-2 border-solid win98-border-light shadow-md p-1;
+  }
+
+  .title-bar-win98 {
+    @apply win98-title-gradient text-white font-bold px-1 py-0.5 mb-1
+           flex justify-between items-center text-xs
+           border-t border-l border-white border-r border-b border-win98-gray-dark;
+  }
+
+  .title-bar-button-win98 {
+    @apply bg-win98-gray-light border-t border-l border-white border-r border-b border-win98-gray-medium
+           w-5 h-4 flex items-center justify-center text-black cursor-pointer
+           text-shadow-win98 btn-win98-active;
+  }
+
+  .window-content-win98 {
+    @apply bg-win98-gray-light p-4 border-2 border-solid win98-border-dark
+           text-center space-y-4;
   }
 }
