@@ -1,10 +1,22 @@
+import { access } from "fs";
 import webClientLogger from '../logger/webClientLogger.js';
 
-async function frontendRoute(fastify, options) {
+async function frontendRoute (fastify, options) {
+	fastify.get("/home", (req, reply) =>{
+			reply.sendFile('landingPage.html');
+	})
+	fastify.get("/login", (req, reply) =>{
+			reply.sendFile('login.html')
+	})
+	fastify.get("/register", (req, reply) => {
+		reply.sendFile('register.html')
+	})
+	fastify.get("/game", (req, reply) => {
+		reply.sendFile('game.html')
+	})
   fastify.get("/", (req, reply) => {
     return reply.sendFile('index.html');
-  });
-
+  })
   fastify.post("/log", async (req, reply) => {
     const body = await req.body;
 
@@ -18,7 +30,6 @@ async function frontendRoute(fastify, options) {
     } else {
       fastify.log.error({ context }, `Unknown log level: ${level} — ${message}`);
     }
-
     return reply.send({ status: "ok" });
   });
 }

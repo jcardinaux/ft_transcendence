@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 98 Pong</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        .window-98-border {
+            border-style: solid;
+            border-width: 2px;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            box-shadow: 1px 1px 0px 0px #000000;
+        }
+        .window-98-titlebar {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+        }
+        .window-98-button {
+            border-style: solid;
+            border-width: 2px;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            background-color: #c0c0c0;
+        }
+        .window-98-button:active {
+            border-color: #808080 #dfdfdf #dfdfdf #808080;
+        }
+        .window-98-divider {
+            border-top: 1px solid #808080;
+            border-bottom: 1px solid #ffffff;
+        }
+        .window-98-menu {
+            background-color: #c0c0c0;
+            border: 1px solid #808080;
+            box-shadow: 2px 2px 0px 0px #000000;
+        }
+        .window-98-menu-item:hover {
+            background-color: #000080;
+            color: white;
+        }
+        .pong-field {
+            background-color: #000000;
+            border: 4px solid #808080;
+        }
+        .pong-paddle {
+            background-color: #ffffff;
+        }
+        .pong-ball {
+            background-color: #ffffff;
+            border-radius: 50%;
+        }
+        .score-display {
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .start-screen {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .pixel-font {
+            font-family: 'Courier New', monospace;
+        }
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0.1) 50%,
+                transparent 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-300 h-screen overflow-hidden flex items-center justify-center p-4">
+    <!-- CRT Monitor Effect -->
+    <div class="absolute inset-0 bg-black opacity-10 rounded-lg pointer-events-none"></div>
+    <div class="scanlines"></div>
+    
+    <!-- Main Window -->
+    <div class="window-98-border bg-gray-200 w-full max-w-3xl">
+        <!-- Title Bar -->
+        <div class="window-98-titlebar flex justify-between items-center px-2 py-1">
+            <div class="flex items-center">
+                <i class="fas fa-gamepad mr-2"></i>
+                <span class="font-bold pixel-font">Windows 98 Pong</span>
+            </div>
+            <div class="flex">
+                <button class="window-98-button w-6 h-6 flex items-center justify-center mr-1" onclick="minimizeWindow()">
+                    <i class="fas fa-window-minimize text-xs"></i>
+                </button>
+                <button class="window-98-button w-6 h-6 flex items-center justify-center mr-1" onclick="maximizeWindow()">
+                    <i class="fas fa-window-maximize text-xs"></i>
+                </button>
+                <button class="window-98-button w-6 h-6 flex items-center justify-center" onclick="closeWindow()">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Menu Bar -->
+        <div class="flex bg-gray-200 px-2 py-1 window-98-border">
+            <div class="relative group">
+                <button class="window-98-button px-2 mr-1 pixel-font">File</button>
+                <div class="window-98-menu absolute left-0 mt-1 w-48 z-10 hidden group-hover:block">
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="startGame()">New Game</div>
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="pauseGame()">Pause</div>
+                    <div class="window-98-divider"></div>
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="closeWindow()">Exit</div>
+                </div>
+            </div>
+            <div class="relative group">
+                <button class="window-98-button px-2 mr-1 pixel-font">Options</button>
+                <div class="window-98-menu absolute left-0 mt-1 w-48 z-10 hidden group-hover:block">
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="changeDifficulty('easy')">Easy</div>
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="changeDifficulty('medium')">Medium</div>
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="changeDifficulty('hard')">Hard</div>
+                </div>
+            </div>
+            <div class="relative group">
+                <button class="window-98-button px-2 mr-1 pixel-font">Help</button>
+                <div class="window-98-menu absolute left-0 mt-1 w-64 z-10 hidden group-hover:block">
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="showHelp()">How to Play</div>
+                    <div class="window-98-divider"></div>
+                    <div class="window-98-menu-item px-4 py-1 cursor-pointer pixel-font" onclick="showAbout()">About Windows 98 Pong</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="flex justify-between bg-gray-200 px-2 py-1 window-98-border text-xs pixel-font">
+            <div id="status-message">Ready</div>
+            <div id="difficulty-display">Difficulty: Medium</div>
+        </div>
+        
+        <!-- Game Area -->
+        <div class="p-4 flex flex-col items-center">
+            <div class="relative pong-field w-full h-96 mb-4">
+                <!-- Start Screen -->
+                <div id="start-screen" class="start-screen absolute inset-0 flex flex-col items-center justify-center z-10">
+                    <h2 class="text-white text-3xl mb-4 pixel-font">WINDOWS 98 PONG</h2>
+                    <p class="text-white mb-6 text-center pixel-font">Use arrow keys or W/S to move paddles<br>First to 10 points wins!</p>
+                    <button onclick="startGame()" class="window-98-button px-6 py-2 text-lg pixel-font">
+                        <i class="fas fa-play mr-2"></i>Start Game
+                    </button>
+                </div>
+                
+                <!-- Game Elements -->
+                <div id="left-paddle" class="pong-paddle absolute w-4 h-16 left-2 top-1/2 transform -translate-y-1/2"></div>
+                <div id="right-paddle" class="pong-paddle absolute w-4 h-16 right-2 top-1/2 transform -translate-y-1/2"></div>
+                <div id="ball" class="pong-ball absolute w-4 h-4 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                
+                <!-- Score Display -->
+                <div class="absolute top-4 left-0 right-0 flex justify-between px-8">
+                    <div id="left-score" class="score-display text-4xl">0</div>
+                    <div id="right-score" class="score-display text-4xl">0</div>
+                </div>
+                
+                <!-- Game Over Screen -->
+                <div id="game-over-screen" class="start-screen absolute inset-0 flex flex-col items-center justify-center z-10 hidden">
+                    <h2 id="winner-message" class="text-white text-3xl mb-4 pixel-font"></h2>
+                    <button onclick="startGame()" class="window-98-button px-6 py-2 text-lg pixel-font">
+                        <i class="fas fa-redo mr-2"></i>Play Again
+                    </button>
+                </div>
+            </div>
+            
+            <!-- System Messages -->
+            <div id="system-message" class="bg-gray-200 p-2 window-98-border w-full text-sm pixel-font hidden">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                    <span id="message-text"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- About Dialog (hidden by default) -->
+    <div id="about-dialog" class="window-98-border bg-gray-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 z-20 hidden">
+        <div class="window-98-titlebar flex justify-between items-center px-2 py-1">
+            <div class="flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                <span class="font-bold pixel-font">About Windows 98 Pong</span>
+            </div>
+            <button class="window-98-button w-6 h-6 flex items-center justify-center" onclick="document.getElementById('about-dialog').classList.add('hidden')">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <div class="flex items-center mb-4">
+                <div class="bg-blue-600 text-white w-16 h-16 flex items-center justify-center mr-4">
+                    <i class="fas fa-gamepad text-3xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold pixel-font">Windows 98 Pong</h3>
+                    <p class="text-sm pixel-font">Version 1.0</p>
+                    <p class="text-sm pixel-font">© 1998 Microsoft Corporation</p>
+                </div>
+            </div>
+            <p class="text-sm mb-4 pixel-font">A nostalgic recreation of the classic Pong game with Windows 98 aesthetics.</p>
+            <div class="window-98-divider mb-4"></div>
+            <p class="text-xs pixel-font">This product is licensed to:<br>Windows 98 User</p>
+        </div>
+        <div class="flex justify-end p-2 bg-gray-200">
+            <button class="window-98-button px-4 py-1 pixel-font" onclick="document.getElementById('about-dialog').classList.add('hidden')">OK</button>
+        </div>
+    </div>
+    
+    <!-- Help Dialog (hidden by default) -->
+    <div id="help-dialog" class="window-98-border bg-gray-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 z-20 hidden">
+        <div class="window-98-titlebar flex justify-between items-center px-2 py-1">
+            <div class="flex items-center">
+                <i class="fas fa-question-circle mr-2"></i>
+                <span class="font-bold pixel-font">Windows 98 Pong Help</span>
+            </div>
+            <button class="window-98-button w-6 h-6 flex items-center justify-center" onclick="document.getElementById('help-dialog').classList.add('hidden')">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <h3 class="font-bold mb-2 pixel-font">How to Play:</h3>
+            <ul class="list-disc pl-5 mb-4 text-sm pixel-font">
+                <li class="mb-1">Player 1 (Left): Use W (up) and S (down) keys</li>
+                <li class="mb-1">Player 2 (Right): Use Arrow Up and Arrow Down keys</li>
+                <li>First player to score 10 points wins the game</li>
+            </ul>
+            <div class="window-98-divider mb-4"></div>
+            <h3 class="font-bold mb-2 pixel-font">Game Options:</h3>
+            <ul class="list-disc pl-5 text-sm pixel-font">
+                <li class="mb-1">Easy: Slower ball speed</li>
+                <li class="mb-1">Medium: Moderate ball speed</li>
+                <li>Hard: Fast ball speed</li>
+            </ul>
+        </div>
+        <div class="flex justify-end p-2 bg-gray-200">
+            <button class="window-98-button px-4 py-1 pixel-font" onclick="document.getElementById('help-dialog').classList.add('hidden')">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let gameRunning = false;
+        let gamePaused = false;
+        let leftScore = 0;
+        let rightScore = 0;
+        let difficulty = 'medium';
+        let ballSpeed = 5;
+        let paddleSpeed = 8;
+        
+        // DOM elements
+        const leftPaddle = document.getElementById('left-paddle');
+        const rightPaddle = document.getElementById('right-paddle');
+        const ball = document.getElementById('ball');
+        const leftScoreDisplay = document.getElementById('left-score');
+        const rightScoreDisplay = document.getElementById('right-score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const winnerMessage = document.getElementById('winner-message');
+        const statusMessage = document.getElementById('status-message');
+        const difficultyDisplay = document.getElementById('difficulty-display');
+        const systemMessage = document.getElementById('system-message');
+        const messageText = document.getElementById('message-text');
+        
+        // Ball movement variables
+        let ballX = 0;
+        let ballY = 0;
+        let ballDX = 0;
+        let ballDY = 0;
+        
+        // Paddle positions
+        let leftPaddleY = 0;
+        let rightPaddleY = 0;
+        
+        // Key states
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            w: false,
+            s: false
+        };
+        
+        // Initialize game
+        function initGame() {
+            const gameField = document.querySelector('.pong-field');
+            const fieldRect = gameField.getBoundingClientRect();
+            
+            // Set initial paddle positions
+            leftPaddleY = fieldRect.height / 2 - leftPaddle.offsetHeight / 2;
+            rightPaddleY = fieldRect.height / 2 - rightPaddle.offsetHeight / 2;
+            leftPaddle.style.top = `${leftPaddleY}px`;
+            rightPaddle.style.top = `${rightPaddleY}px`;
+            
+            // Set initial ball position
+            ballX = fieldRect.width / 2 - ball.offsetWidth / 2;
+            ballY = fieldRect.height / 2 - ball.offsetHeight / 2;
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+            
+            // Reset scores
+            leftScore = 0;
+            rightScore = 0;
+            leftScoreDisplay.textContent = '0';
+            rightScoreDisplay.textContent = '0';
+            
+            // Set difficulty
+            setDifficulty(difficulty);
+            
+            // Hide start screen and game over screen
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            
+            // Show status message
+            showSystemMessage('Game started! Good luck!');
+        }
+        
+        // Start game
+        function startGame() {
+            if (gameRunning) return;
+            
+            initGame();
+            gameRunning = true;
+            gamePaused = false;
+            statusMessage.textContent = 'Game in progress...';
+            
+            // Set random initial ball direction
+            const angle = Math.random() * Math.PI / 2 - Math.PI / 4; // -45 to 45 degrees
+            ballDX = Math.cos(angle) * ballSpeed;
+            ballDY = Math.sin(angle) * ballSpeed;
+            
+            // Randomly choose left or right direction
+            if (Math.random() < 0.5) ballDX *= -1;
+            
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!gameRunning || gamePaused) return;
+            
+            updateGame();
+            renderGame();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Update game state
+        function updateGame() {
+            const gameField = document.querySelector('.pong-field');
+            const fieldRect = gameField.getBoundingClientRect();
+            
+            // Move paddles
+            if (keys.ArrowUp && rightPaddleY > 0) {
+                rightPaddleY -= paddleSpeed;
+            }
+            if (keys.ArrowDown && rightPaddleY < fieldRect.height - rightPaddle.offsetHeight) {
+                rightPaddleY += paddleSpeed;
+            }
+            if (keys.w && leftPaddleY > 0) {
+                leftPaddleY -= paddleSpeed;
+            }
+            if (keys.s && leftPaddleY < fieldRect.height - leftPaddle.offsetHeight) {
+                leftPaddleY += paddleSpeed;
+            }
+            
+            // Move ball
+            ballX += ballDX;
+            ballY += ballDY;
+            
+            // Ball collision with top and bottom
+            if (ballY <= 0 || ballY >= fieldRect.height - ball.offsetHeight) {
+                ballDY *= -1;
+                
+                // Add some randomness to the bounce
+                ballDY += (Math.random() * 0.5 - 0.25);
+                
+                // Ensure ball doesn't get stuck moving horizontally
+                if (Math.abs(ballDY) < 0.5) {
+                    ballDY = ballDY < 0 ? -0.5 : 0.5;
+                }
+            }
+            
+            // Ball collision with paddles
+            if (
+                ballX <= leftPaddle.offsetWidth + 2 && 
+                ballY + ball.offsetHeight >= leftPaddleY && 
+                ballY <= leftPaddleY + leftPaddle.offsetHeight
+            ) {
+                ballX = leftPaddle.offsetWidth + 2;
+                ballDX *= -1;
+                
+                // Add angle based on where ball hits paddle
+                const hitPosition = (ballY - leftPaddleY) / leftPaddle.offsetHeight;
+                ballDY = (hitPosition - 0.5) * 2 * ballSpeed;
+                
+                // Increase speed slightly
+                ballDX *= 1.05;
+                ballDY *= 1.05;
+            }
+            
+            if (
+                ballX >= fieldRect.width - rightPaddle.offsetWidth - ball.offsetWidth - 2 && 
+                ballY + ball.offsetHeight >= rightPaddleY && 
+                ballY <= rightPaddleY + rightPaddle.offsetHeight
+            ) {
+                ballX = fieldRect.width - rightPaddle.offsetWidth - ball.offsetWidth - 2;
+                ballDX *= -1;
+                
+                // Add angle based on where ball hits paddle
+                const hitPosition = (ballY - rightPaddleY) / rightPaddle.offsetHeight;
+                ballDY = (hitPosition - 0.5) * 2 * ballSpeed;
+                
+                // Increase speed slightly
+                ballDX *= 1.05;
+                ballDY *= 1.05;
+            }
+            
+            // Ball out of bounds (scoring)
+            if (ballX < 0) {
+                // Right player scores
+                rightScore++;
+                rightScoreDisplay.textContent = rightScore;
+                resetBall('right');
+                
+                if (rightScore >= 10) {
+                    endGame('right');
+                } else {
+                    showSystemMessage('Player 2 scores!');
+                }
+            } else if (ballX > fieldRect.width - ball.offsetWidth) {
+                // Left player scores
+                leftScore++;
+                leftScoreDisplay.textContent = leftScore;
+                resetBall('left');
+                
+                if (leftScore >= 10) {
+                    endGame('left');
+                } else {
+                    showSystemMessage('Player 1 scores!');
+                }
+            }
+        }
+        
+        // Render game
+        function renderGame() {
+            leftPaddle.style.top = `${leftPaddleY}px`;
+            rightPaddle.style.top = `${rightPaddleY}px`;
+            ball.style.left = `${ballX}px`;
+            ball.style.top = `${ballY}px`;
+        }
+        
+        // Reset ball after scoring
+        function resetBall(scorer) {
+            const gameField = document.querySelector('.pong-field');
+            const fieldRect = gameField.getBoundingClientRect();
+            
+            ballX = fieldRect.width / 2 - ball.offsetWidth / 2;
+            ballY = fieldRect.height / 2 - ball.offsetHeight / 2;
+            
+            // Set random direction towards the non-scoring player
+            const angle = Math.random() * Math.PI / 2 - Math.PI / 4; // -45 to 45 degrees
+            ballDX = Math.cos(angle) * ballSpeed;
+            ballDY = Math.sin(angle) * ballSpeed;
+            
+            if (scorer === 'left') {
+                ballDX = Math.abs(ballDX); // Ball goes right
+            } else {
+                ballDX = -Math.abs(ballDX); // Ball goes left
+            }
+            
+            // Reset paddle positions
+            leftPaddleY = fieldRect.height / 2 - leftPaddle.offsetHeight / 2;
+            rightPaddleY = fieldRect.height / 2 - rightPaddle.offsetHeight / 2;
+        }
+        
+        // End game
+        function endGame(winner) {
+            gameRunning = false;
+            statusMessage.textContent = 'Game over!';
+            
+            // Show winner message
+            winnerMessage.textContent = winner === 'left' ? 'Player 1 Wins!' : 'Player 2 Wins!';
+            gameOverScreen.classList.remove('hidden');
+            
+            showSystemMessage(`Game over! ${winner === 'left' ? 'Player 1' : 'Player 2'} wins!`);
+        }
+        
+        // Pause game
+        function pauseGame() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            
+            if (gamePaused) {
+                statusMessage.textContent = 'Game paused';
+                showSystemMessage('Game paused. Press P to resume.');
+            } else {
+                statusMessage.textContent = 'Game in progress...';
+                showSystemMessage('Game resumed!');
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Set difficulty
+        function setDifficulty(level) {
+            difficulty = level;
+            
+            switch (level) {
+                case 'easy':
+                    ballSpeed = 4;
+                    paddleSpeed = 6;
+                    difficultyDisplay.textContent = 'Difficulty: Easy';
+                    break;
+                case 'medium':
+                    ballSpeed = 6;
+                    paddleSpeed = 8;
+                    difficultyDisplay.textContent = 'Difficulty: Medium';
+                    break;
+                case 'hard':
+                    ballSpeed = 8;
+                    paddleSpeed = 10;
+                    difficultyDisplay.textContent = 'Difficulty: Hard';
+                    break;
+            }
+            
+            showSystemMessage(`Difficulty set to ${level}`);
+        }
+        
+        // Change difficulty
+        function changeDifficulty(level) {
+            setDifficulty(level);
+            
+            if (gameRunning) {
+                // Adjust ball speed if game is running
+                const speed = Math.sqrt(ballDX * ballDX + ballDY * ballDY);
+                const ratio = ballSpeed / speed;
+                
+                if (speed > 0) {
+                    ballDX *= ratio;
+                    ballDY *= ratio;
+                }
+            }
+        }
+        
+        // Show system message
+        function showSystemMessage(msg) {
+            messageText.textContent = msg;
+            systemMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                systemMessage.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Show help dialog
+        function showHelp() {
+            document.getElementById('help-dialog').classList.remove('hidden');
+        }
+        
+        // Show about dialog
+        function showAbout() {
+            document.getElementById('about-dialog').classList.remove('hidden');
+        }
+        
+        // Window controls
+        function minimizeWindow() {
+            showSystemMessage('Minimize not implemented in this demo');
+        }
+        
+        function maximizeWindow() {
+            showSystemMessage('Maximize not implemented in this demo');
+        }
+        
+        function closeWindow() {
+            if (confirm('Are you sure you want to exit Windows 98 Pong?')) {
+                showSystemMessage('Exiting game...');
+                setTimeout(() => {
+                    alert('Thank you for playing Windows 98 Pong!');
+                }, 1000);
+            }
+        }
+        
+        // Keyboard event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+            }
+            
+            // Pause game with P key
+            if (e.key === 'p' && gameRunning) {
+                pauseGame();
+            }
+            
+            // Start game with spacebar if not running
+            if (e.key === ' ' && !gameRunning && startScreen.classList.contains('hidden')) {
+                startGame();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+            }
+        });
+        
+        // Initialize UI
+        showSystemMessage('Welcome to Windows 98 Pong! Click "File > New Game" to start.');
+    </script>
+</body>
+</html>
