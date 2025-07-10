@@ -2,7 +2,7 @@ import { access } from "fs";
 import webClientLogger from '../logger/webClientLogger.js';
 
 async function frontendRoute (fastify, options) {
-	fastify.get("/home", (req, reply) =>{
+	/*fastify.get("/", (req, reply) =>{
 			reply.sendFile('landingPage.html');
 	})
 	fastify.get("/login", (req, reply) =>{
@@ -13,10 +13,7 @@ async function frontendRoute (fastify, options) {
 	})
 	fastify.get("/game", (req, reply) => {
 		reply.sendFile('game.html')
-	})
-  fastify.get("/", (req, reply) => {
-    return reply.sendFile('index.html');
-  })
+	})*/
   fastify.post("/log", async (req, reply) => {
     const body = await req.body;
 
