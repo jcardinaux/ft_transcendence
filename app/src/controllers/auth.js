@@ -5,7 +5,7 @@ import { authenticator } from 'otplib'
 
 export const getAllUsers = (req, reply) => {
 	const db = reply.server.db
-	const users = db.prepare('SELECT id, username FROM users').all()
+	const users = db.prepare('SELECT id, username, twofa_enabled FROM users').all()
 	reply.send(users)
 }
 

@@ -47,7 +47,6 @@ const schema = {
     }
 }
 
-//const app = fastify({logger:true, https: httpOption})
 // --- log ---
 const app = fastify({
   logger: {
@@ -118,10 +117,12 @@ const start = async () => {
             confKey: 'config', //accesso gobale tramite  app.config 
         });
         await app.register(multipart)
+        
         await app.register(fastifyStatic, {
             root: path.join(__dirname, '..', 'public'),
-            prefix: '/'
+            prefix: '/',
         })
+        
         await app.register(fastifySwagger, {
             openapi: {
                 info: {
@@ -155,10 +156,23 @@ const start = async () => {
                 deepLinking: true 
             },
         })
-        await app.register(authRoutes, {prefix: '/auth'})
-        await app.register(profileRoute, {prefix: '/profile'})
-        await app.register(matchesRoute, {prefix: '/matches'})
+        
+        // Registra le rotte API PRIMA del fallback per SPA
+        await app.register(authRoutes, {prefix: '/api/auth'})
+        await app.register(profileRoute, {prefix: '/api/profile'})
+        await app.register(matchesRoute, {prefix: '/api/matches'})
         await app.register(frontendRoute)
+        
+        app.setNotFoundHandler((req, reply) => {
+            const accept = req.headers.accept || '';
+            if (accept.includes('text/html')) {
+            // Serve index.html solo se si tratta di una richiesta del browser (SPA)
+                reply.type('text/html').send(fs.readFileSync(path.join(__dirname, '../public/index.html')));
+            } else {
+                // Altrimenti è 404 (es: /login/js/main.js non esiste)
+                reply.status(404).send({ error: 'Not found' });
+            }
+        });
         await app.listen({port: app.config.FASTIFY_PORT, host: '0.0.0.0'})
     }
     catch (error) {
