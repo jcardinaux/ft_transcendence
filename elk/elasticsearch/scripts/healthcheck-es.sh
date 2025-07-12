@@ -1,2 +1,2 @@
 #!/bin/bash
-curl -s -u "elastic:$ELASTIC_PASSWORD" "http://localhost:9200/_cluster/health" | grep -qE '"status":"green|yellow"'
+curl -s -k --cert /usr/share/elasticsearch/config/certs/elasticsearch-cert.pem --key /usr/share/elasticsearch/config/certs/elasticsearch-key.pem -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_cluster/health" | grep -qE '"status":"green|yellow"'

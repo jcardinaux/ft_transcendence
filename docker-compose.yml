@@ -1,11 +1,27 @@
 services:
+  # Certificate Generator Service - Runs first to create all certificates
+  cert-generator:
+    build:
+      context: ./certs-generator
+      dockerfile: Dockerfile
+    container_name: ft-cert-generator
+    volumes:
+      - shared-certs:/shared-certs
+    networks:
+      - elk-net
+    command: ["./generate-certs.sh"]
+
   app:
     build:
       context: .
       dockerfile: app/Dockerfile
     container_name: ft-app
+    depends_on:
+      cert-generator:
+        condition: service_completed_successfully
     volumes:
       - ./app/logs:/app/logs
+      - shared-certs:/shared-certs:ro
     env_file: ./app/.env
     ports:
       - "5000:5000"
@@ -20,6 +36,9 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: elk-elasticsearch
+    depends_on:
+      cert-generator:
+        condition: service_completed_successfully
     environment:
       - node.name=elasticsearch
       - cluster.name=docker-cluster
@@ -28,8 +47,14 @@ services:
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-changeme}
       - bootstrap.memory_lock=true
       - xpack.security.enabled=true
-      - xpack.security.http.ssl.enabled=false
-      - xpack.security.transport.ssl.enabled=false
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch-key.pem
+      - xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch-cert.pem
+      - xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca-cert.pem
+      - xpack.security.transport.ssl.enabled=true
+      - xpack.security.transport.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch-key.pem
+      - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch-cert.pem
+      - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca-cert.pem
       - xpack.license.self_generated.type=basic
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ulimits:
@@ -39,6 +64,7 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
       - ./elk/elasticsearch/scripts:/scripts
+      - shared-certs:/shared-certs:ro
     ports:
       - "9200:9200"
     networks:
@@ -54,17 +80,24 @@ services:
     image: docker.elastic.co/kibana/kibana:8.15.0
     container_name: elk-kibana
     depends_on:
+      cert-generator:
+        condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy
     environment:
       - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=https://elasticsearch:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=/shared-certs/ca/ca-cert.pem
+      - SERVER_SSL_ENABLED=true
+      - SERVER_SSL_KEY=/shared-certs/kibana/kibana-key.pem
+      - SERVER_SSL_CERTIFICATE=/shared-certs/kibana/kibana-cert.pem
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     volumes:
       - kibana-data:/usr/share/kibana/data
       - ./elk/kibana/scripts:/scripts
+      - shared-certs:/shared-certs:ro
     ports:
       - "5601:5601"
     networks:
@@ -81,6 +114,8 @@ services:
     container_name: elk-logstash
     entrypoint: ["/scripts/entrypoint-ls.sh"]
     depends_on:
+      cert-generator:
+        condition: service_completed_successfully
       app:
         condition: service_healthy
       elasticsearch:
@@ -91,6 +126,7 @@ services:
       - ./elk/logstash/scripts:/scripts
       - ./app/logs:/logs
       - logstash-data:/usr/share/logstash/data
+      - shared-certs:/shared-certs:ro
     environment:
       - LS_JAVA_OPTS=-Xms512m -Xmx512m
       - ES_USER=elastic
@@ -107,6 +143,7 @@ networks:
     driver: bridge
 
 volumes:
+  shared-certs:
   elasticsearch-data:
   kibana-data:
   logstash-data:
