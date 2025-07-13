@@ -55,17 +55,17 @@ check_prerequisites() {
 
 run_comprehensive() {
     echo -e "${BLUE}Running complete ELK Stack tests...${NC}"
-    "$SCRIPT_DIR/test-elk-stack.sh"
+    "$SCRIPT_DIR/elk-validation.sh"
 }
 
 run_ci() {
     echo -e "${BLUE}Running CI/CD ELK tests...${NC}"
-    "$SCRIPT_DIR/ci-elk-test.sh"
+    "$SCRIPT_DIR/elk-ci-pipeline.sh"
 }
 
 run_ci_strict() {
     echo -e "${BLUE}Running strict CI/CD ELK tests...${NC}"
-    "$SCRIPT_DIR/ci-elk-test.sh" --fail-on-warnings
+    "$SCRIPT_DIR/elk-ci-pipeline.sh" --fail-on-warnings
 }
 
 run_quick() {
