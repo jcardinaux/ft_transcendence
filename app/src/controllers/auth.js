@@ -28,7 +28,17 @@ export const addUser = async (req, reply) => {
 		reply.code(201).send({id: newUser.lastInsertRowid, username, email})
 	}
 	catch (err) {
-		reply.code(400).send({message: err})
+		let errorMessage = 'registration error occured'
+		if (err.message.includes('SQLITE_CONSTRAINT_UNIQUE') || err.message.includes('UNIQUE constraint failed')) {
+                if (err.message.includes('users.username')) {
+                    errorMessage = 'this username are not avaiable';
+                } else if (err.message.includes('users.email')) {
+                    errorMessage = 'mail already registered';
+                } else {
+                    errorMessage = 'this display name are not avaible';
+                }
+            }
+		reply.code(400).send({message: errorMessage})
 	}
 }
 
@@ -67,6 +77,6 @@ export const login = async (req, reply) => {
 		{expiresIn: '1d'}
 	)
 
-	reply.code(200).send({token})
+	reply.code(201).send({token})
 }
 

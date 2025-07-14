@@ -16,12 +16,11 @@ export default {
         'win98-blue-light': '#1084d0', // Grigio-blu chiaro della barra del titolo
       },
       fontFamily: {
-        // Puoi definire un font specifico Win98 se lo importi o hai un fallback simile
         'win98': ['"MS Sans Serif"', 'Arial', 'sans-serif'],
       },
-      // Utility per text-shadow (richiede un plugin o aggiunta manuale)
       textShadow: {
         'win98': '1px 1px 0 #ffffff',
+        'glow': '0 0 2px #fff, 0 0 6px #fff, 0 0 12px #fff, 0 0 24px #fff',
       }
     },
   },
@@ -30,6 +29,9 @@ export default {
       const newUtilities = {
         '.text-shadow-win98': {
           'text-shadow': theme('textShadow.win98'),
+        },
+        '.text-shadow-glow': {
+          'text-shadow': theme('textShadow.glow'),
         },
       }
       addUtilities(newUtilities, ['responsive', 'hover']);

@@ -5,8 +5,11 @@
 /*classi tailwind personalizzate  */
 
 body {
-  /* Ora usiamo le classi definite in tailwind.config.js */
   @apply bg-win98-bg font-win98;
+}
+
+.img-program-win98 {
+  @apply w-11 h-11;
 }
 
 .win98-border-light {
@@ -16,29 +19,25 @@ body {
 }
 
 .win98-border-dark {
-  /* @apply per i bordi */
   @apply border-t-2 border-l-2 border-r-2 border-b-2
          border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
 }
 
 .win98-title-gradient {
-  /* I gradienti CSS non possono essere mappati direttamente con @apply da classi Tailwind predefinite.
-     Quindi, questa rimane una regola CSS standard. */
   background: linear-gradient(to right, theme('colors.win98-blue-dark'), theme('colors.win98-blue-light'));
 }
 
 .btn-win98-active:active {
   /* Qui usiamo @apply per i colori dei bordi e padding diretti */
-  @apply pt-[5px] pl-[13px] pr-[11px] pb-[3px] /* Valori arbitrari per il padding */
+  @apply  /* Valori arbitrari per il padding */
          border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
 }
 
-/* Esempio di un componente che potresti voler definire qui */
 @layer components {
   .btn-win98 {
     @apply bg-win98-gray-light border-2 border-solid win98-border-light
            px-4 py-1.5 font-normal cursor-pointer text-shadow-win98
-           btn-win98-active; /* Applichiamo anche la classe per lo stato attivo */
+           btn-win98-active;
   }
 
   .window-frame-win98 {
@@ -60,5 +59,15 @@ body {
   .window-content-win98 {
     @apply bg-win98-gray-light p-4 border-2 border-solid win98-border-dark
            text-center space-y-4;
+  }
+  .input-win98 {
+    @apply bg-white border-2 border-solid win98-border-dark
+           p-1 text-black focus:outline-none focus:border-blue-500; /* Stili focus basilari */
+  }
+  .form-title-win98 {
+    @apply text-black font-bold text-lg mb-2 text-shadow-win98; /* Un po' più grande e con ombra */
+  }
+  .icon-button-win98 {
+    @apply text-white text-xs flex flex-col items-center justify-center;
   }
 }

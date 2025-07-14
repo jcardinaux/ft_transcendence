@@ -23,7 +23,8 @@ export const UsernameOpts = {
 		},
 		response:{
 			200: MessageSchema,
-			404: MessageSchema
+			404: MessageSchema,
+			500: MessageSchema
 		}
 	},
 	preHandler: (req, reply) => req.server.verifyJWT(req, reply),

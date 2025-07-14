@@ -7,7 +7,7 @@ last  42 project, a pong web app
 - Major module: use fastify as backend . ```USING IT``` ```HTTPS IMPLEMENTED```
 - Major module: Standard user management, authentication and users across tournaments. ON ```WORKING```
 - Major module: Major module: Remote players. ```NOT STARTED```
-- Major module: Live Chat. ```NOT STARTED```
+- Major module: ELK implementation. ```ON WORKING```
 
 - Minor module: Use a database for the backend -and more. ```USING IT```
 - Minor module: Use a framework or toolkit to build the front-end. ```NOT STARTED```
@@ -91,18 +91,23 @@ Ora che abbiamo un backend e un database, possiamo costruire le funzionalità pe
 
 A questo punto siamo a **4 Moduli Major**.
 
-### Cluster 3: Gameplay e Interattività (Totale: 2 Moduli Major)
+### Cluster 3: Gameplay e Interattività (Totale: 1 Modulo Major)
 
-Questi moduli migliorano l'esperienza di gioco e la rendono più sociale.
+Questo modulo migliorano l'esperienza di gioco e la rendono più sociale.
 
 * **Major module: Remote players**
     * **Perché**: Permette a due giocatori di sfidarsi da computer diversi. Questa è una funzionalità chiave per un gioco online e introduce l'uso dei WebSockets, una tecnologia fondamentale per la comunicazione in tempo reale.
-* **Major module: Live Chat**
-    * **Perché**: Aggiunge una chat al sito. La grande sinergia qui è che utilizza la stessa tecnologia del modulo "Remote players" (WebSockets). Una volta impostata la comunicazione in tempo reale per il gioco, estenderla per una chat sarà molto più semplice.
+
+### cluster 4: DevOps (Totale: 1 modulo major)
+
+implementazione di un docker compose più coplesso con un sistema di logging
+
+* **Major module: ELK**
+    * **Perché**: sappiamo già come implementare lo stack elk
 
 Ora abbiamo raggiunto i **6 Moduli Major**.
 
-### Cluster 4: Dati e Personalizzazione (Totale: 1 Modulo Major)
+### Cluster 5: Dati e Personalizzazione (Totale: 1 Modulo Major)
 
 Questi due moduli minori sono relativamente semplici da implementare una volta che la struttura principale è pronta.
 
@@ -124,7 +129,7 @@ Ecco la lista completa per raggiungere il 100%:
     * Standard User Management
     * 2FA and JWT
     * Remote Players
-    * Live Chat
+    * ELK
 * **Minor (x4, valgono 2 Major)**:
     * Database (SQLite)
     * Frontend Toolkit (Tailwind CSS)
@@ -153,8 +158,9 @@ Implementa in ordine:
 
 1.  **Gestione Utenti Standard**: Crea le tabelle nel database SQLite, le rotte API su Fastify per registrazione/login e le pagine frontend.
 2.  **JWT e 2FA**: Proteggi le tue API con JWT e aggiungi il flusso per la configurazione del 2FA.
-3.  **Remote Players e Chat**: Implementa i WebSockets su Fastify per gestire la comunicazione in tempo reale sia per il gioco che per la chat.
-4.  **Dashboard e Personalizzazione**: Crea le pagine per le statistiche e aggiungi la logica per le opzioni di gioco personalizzate.
+3.  **Remote Players**: Implementa i WebSockets su Fastify per gestire la comunicazione in tempo reale per il gioco.
+4.  **ELK**: integrazione di un sistema di logging per l'applicazione.
+5.  **Dashboard e Personalizzazione**: Crea le pagine per le statistiche e aggiungi la logica per le opzioni di gioco personalizzate.
 
 ### Fase 4: Sicurezza e Rifinitura
 

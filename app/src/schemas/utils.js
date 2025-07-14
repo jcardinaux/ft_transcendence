@@ -20,7 +20,6 @@ export const CompleteUserSchema = {
         id: { type: 'string' },
         username: { type: 'string' },
         display_name: {type: 'string'},
-        password: {type: 'string'},
 		email: {type: 'string'},
         avatar: {type: 'string'},
         totp_secret: {type: 'string'},
