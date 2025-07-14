@@ -8,7 +8,7 @@ services:
     volumes:
       - shared-certs:/shared-certs
     networks:
-      - elk-net
+      - t-net
     command: ["./generate-certs.sh"]
 
   app:
@@ -26,7 +26,7 @@ services:
     ports:
       - "5000:5000"
     networks:
-      - elk-net
+      - t-net
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSk https://localhost:5000/api/test || exit 1"]
       interval: 30s
@@ -43,8 +43,8 @@ services:
       - node.name=elasticsearch
       - cluster.name=docker-cluster
       - discovery.type=single-node
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-changeme}
-      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-changeme}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
       - bootstrap.memory_lock=true
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
@@ -57,24 +57,27 @@ services:
       - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca-cert.pem
       - xpack.license.self_generated.type=basic
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - path.repo=/usr/share/elasticsearch/archives
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+      - elasticsearch-archives:/usr/share/elasticsearch/archives
       - ./elk/elasticsearch/scripts:/scripts
       - shared-certs:/shared-certs:ro
     ports:
       - "9200:9200"
     networks:
-      - elk-net
+      - t-net
     healthcheck:
       test: ["CMD-SHELL", "/scripts/healthcheck-es.sh"]
       interval: 10s
       timeout: 10s
       retries: 30
     entrypoint: ["/bin/bash", "-c", "/scripts/entrypoint-es.sh"]
+    restart: unless-stopped
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.15.0
@@ -101,13 +104,14 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - elk-net
+      - t-net
     healthcheck:
       test: ["CMD-SHELL", "/scripts/healthcheck-kibana.sh"]
       interval: 10s
       timeout: 10s
       retries: 30
-    restart: on-failure
+    restart: unless-stopped
+    entrypoint: ["/scripts/init-kibana.sh"]
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.15.0
@@ -132,18 +136,17 @@ services:
       - ES_USER=elastic
       - ES_PASS=${ELASTIC_PASSWORD}
       - PIPELINE_WORKERS=2
-    ports:
-      - "5044:5044"
     networks:
-      - elk-net
+      - t-net
     restart: unless-stopped
 
 networks:
-  elk-net:
+  t-net:
     driver: bridge
 
 volumes:
   shared-certs:
   elasticsearch-data:
+  elasticsearch-archives:
   kibana-data:
   logstash-data:

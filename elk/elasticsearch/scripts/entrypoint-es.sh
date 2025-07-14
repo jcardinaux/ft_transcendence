@@ -4,6 +4,11 @@ set -e
 
 echo "Starting Elasticsearch with TLS configuration..."
 
+# Create archive directory (ownership will be set by tests)
+echo "Setting up archive directory..."
+mkdir -p /usr/share/elasticsearch/archives
+echo "Archive directory ready."
+
 # Create certificates directory in Elasticsearch config
 mkdir -p /usr/share/elasticsearch/config/certs
 
@@ -57,6 +62,10 @@ curl -X PUT -k --cert /usr/share/elasticsearch/config/certs/elasticsearch-cert.p
       }
     }
   }'
+
+# Setup ILM policies
+echo "Setting up Index Lifecycle Management policies..."
+/scripts/setup-ilm.sh
   
 # Keep the container running
 wait
