@@ -735,6 +735,10 @@ video {
   position: absolute;
 }
 
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
 .mb-4 {
   margin-bottom: 1rem;
 }
@@ -763,6 +767,10 @@ video {
   display: none;
 }
 
+.h-10 {
+  height: 2.5rem;
+}
+
 .h-11 {
   height: 2.75rem;
 }
@@ -771,16 +779,16 @@ video {
   height: 5rem;
 }
 
-.h-36 {
-  height: 9rem;
-}
-
-.h-28 {
-  height: 7rem;
+.max-h-80 {
+  max-height: 20rem;
 }
 
 .min-h-screen {
   min-height: 100vh;
+}
+
+.w-10 {
+  width: 2.5rem;
 }
 
 .w-11 {
@@ -791,20 +799,16 @@ video {
   width: 5rem;
 }
 
-.w-36 {
-  width: 9rem;
-}
-
-.w-28 {
-  width: 7rem;
-}
-
 .flex-col {
   flex-direction: column;
 }
 
 .items-center {
   align-items: center;
+}
+
+.justify-start {
+  justify-content: flex-start;
 }
 
 .justify-center {
@@ -815,16 +819,12 @@ video {
   justify-content: space-between;
 }
 
-.justify-evenly {
-  justify-content: space-evenly;
-}
-
 .gap-4 {
   gap: 1rem;
 }
 
-.gap-2 {
-  gap: 0.5rem;
+.gap-8 {
+  gap: 2rem;
 }
 
 .space-x-3 > :not([hidden]) ~ :not([hidden]) {
@@ -839,8 +839,8 @@ video {
   margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
-.rounded {
-  border-radius: 0.25rem;
+.overflow-auto {
+  overflow: auto;
 }
 
 .border-2 {
@@ -867,11 +867,6 @@ video {
   background-color: rgb(0 128 128 / var(--tw-bg-opacity, 1));
 }
 
-.bg-blue-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
-}
-
 .object-cover {
   -o-object-fit: cover;
      object-fit: cover;
@@ -883,16 +878,6 @@ video {
 
 .p-5 {
   padding: 1.25rem;
-}
-
-.px-2 {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-.py-1 {
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
 }
 
 .text-center {
@@ -1003,4 +988,73 @@ body {
   border-right-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
   --tw-border-opacity: 1;
   border-bottom-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+}
+
+::-webkit-scrollbar {
+  width: 16px;
+  /* Larghezza standard delle scrollbar di Win98 */
+  height: 16px;
+  /* Altezza per scrollbar orizzontali */
+  /* Lo sfondo della scrollbar (il "binario" visibile dove scorre il thumb) */
+  background: #fff;
+  /* Bordi 3D esterni per l'intera scrollbar */
+  border-top: 1px solid #fff;
+  border-left: 1px solid #fff;
+  border-right: 1px solid #808080;
+  border-bottom: 1px solid #808080;
+}
+
+/* La TRACCIA interna della scrollbar (il "binario" più profondo) */
+
+::-webkit-scrollbar-track {
+  /* Questo crea l'effetto di "incavo" all'interno della scrollbar */
+  border-top: 1px solid #303030;
+  border-left: 1px solid #303030;
+  border-right: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  background-color: #D0D0D0;
+  /* Sfondo della traccia */
+}
+
+/* Il THUMB (la maniglia che si muove) */
+
+::-webkit-scrollbar-thumb {
+  background-color: #C0C0C0;
+  /* Colore base del thumb */
+  /* Bordi 3D del thumb (effetto pulsante) */
+  border-top: 2px solid #fff;
+  border-left: 2px solid #fff;
+  border-right: 2px solid #808080;
+  border-bottom: 2px solid #808080;
+  border-radius: 0;
+  /* Le scrollbar Win98 non avevano bordi arrotondati */
+  min-height: 40px;
+  /* Assicurati che il thumb sia visibile */
+}
+
+/* Effetto HOVER sul thumb */
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #808080;
+  /* Si scurisce leggermente */
+}
+
+/* Effetto ACTIVE/CLICK sul thumb (quando viene premuto) */
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #303030;
+  /* Diventa ancora più scuro */
+  /* Bordi invertiti per l'effetto "pressato" */
+  border-top: 2px solid #808080;
+  border-left: 2px solid #808080;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+}
+
+/* L'angolo in basso a destra dove le scrollbar si incontrano (se entrambe presenti) */
+
+::-webkit-scrollbar-corner {
+  background: #C0C0C0;
+  /* Sfondo dell'angolo */
+  /* Puoi aggiungere bordi simili alla traccia se vuoi */
 }

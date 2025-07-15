@@ -5,7 +5,8 @@ import { authenticator } from 'otplib'
 
 export const getAllUsers = (req, reply) => {
 	const db = reply.server.db
-	const users = db.prepare('SELECT id, username, twofa_enabled FROM users').all()
+	const users = db.prepare('SELECT id, username, avatar, display_name FROM users').all()
+	
 	reply.send(users)
 }
 
@@ -20,12 +21,13 @@ export const getSingleUser = (req, reply) => {
 export const addUser = async (req, reply) => {
 	let {username, password, email, display_name} = req.body
 	const cryptedPsw = await bcrypt.hash(password, 10)
+	const avatar = '/avatar/fallback_avatar.png'
 	try {
-		const stmt = reply.server.db.prepare('INSERT INTO users (username, password, email, display_name) VALUES (? , ?, ?, ?)')
+		const stmt = reply.server.db.prepare('INSERT INTO users (username, password, email, display_name, avatar) VALUES (? , ?, ?, ?, ?)')
 		if(!display_name)
 			display_name = username
-		const newUser = stmt.run(username, cryptedPsw, email, display_name)
-		reply.code(201).send({id: newUser.lastInsertRowid, username, email})
+		const newUser = stmt.run(username, cryptedPsw, email, display_name, avatar)
+		reply.code(201).send({id: newUser.lastInsertRowid, username, email, avatar})
 	}
 	catch (err) {
 		let errorMessage = 'registration error occured'

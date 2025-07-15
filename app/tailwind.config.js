@@ -9,11 +9,13 @@ export default {
     extend: {
       colors: {
         'win98-bg': '#008080',      // Il classico verde-acqua dello sfondo
+        'win98-gray-extraLight' : '#D0D0D0',
         'win98-gray-light': '#C0C0C0', // Grigio delle finestre e pulsanti
         'win98-gray-medium': '#808080', // Grigio scuro per ombre
         'win98-gray-dark': '#303030',  // Grigio ancora più scuro per bordi barra titolo
         'win98-blue-dark': '#0A246A', // Blu scuro della barra del titolo
         'win98-blue-light': '#1084d0', // Grigio-blu chiaro della barra del titolo
+        'win98-white': '#fff',
       },
       fontFamily: {
         'win98': ['"MS Sans Serif"', 'Arial', 'sans-serif'],

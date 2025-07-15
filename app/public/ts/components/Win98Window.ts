@@ -26,7 +26,7 @@ export class Win98Window {
         <span>${options.title}</span>
         <div class="title-bar-button-win98" data-close>&times;</div>
       </div>
-      <div class="window-content-win98">
+      <div class="window-content-win98 overflow-auto">
         ${options.content}
       </div>
     `;

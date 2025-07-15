@@ -10,7 +10,9 @@ export const UserSchema = {
     properties: {
         id: { type: 'string' },
         username: { type: 'string' },
-		email: {type: 'string'}
+		email: {type: 'string'},
+        avatar: {type: 'string'},
+        display_name: {type: 'string'}
     },
 }
 

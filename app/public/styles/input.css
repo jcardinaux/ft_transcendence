@@ -15,12 +15,12 @@ body {
 .win98-border-light {
   /* @apply per i bordi */
   @apply border-t-2 border-l-2 border-r-2 border-b-2
-         border-t-white border-l-white border-r-win98-gray-medium border-b-win98-gray-medium;
+  border-t-white border-l-white border-r-win98-gray-medium border-b-win98-gray-medium;
 }
 
 .win98-border-dark {
   @apply border-t-2 border-l-2 border-r-2 border-b-2
-         border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
+  border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
 }
 
 .win98-title-gradient {
@@ -31,38 +31,38 @@ body {
   /* Qui usiamo @apply per i colori dei bordi e padding diretti */
   @apply  /* Valori arbitrari per il padding */
          border-t-win98-gray-medium border-l-win98-gray-medium border-r-white border-b-white;
-}
+        }
+        
+        @layer components {
+          .btn-win98 {
+            @apply bg-win98-gray-light border-2 border-solid win98-border-light
+            px-4 py-1.5 font-normal cursor-pointer text-shadow-win98
+            btn-win98-active;
+          }
 
-@layer components {
-  .btn-win98 {
-    @apply bg-win98-gray-light border-2 border-solid win98-border-light
-           px-4 py-1.5 font-normal cursor-pointer text-shadow-win98
-           btn-win98-active;
-  }
-
-  .window-frame-win98 {
+          .window-frame-win98 {
     @apply bg-win98-gray-light border-2 border-solid win98-border-light shadow-md p-1;
   }
 
   .title-bar-win98 {
     @apply win98-title-gradient text-white font-bold px-1 py-0.5 mb-1
-           flex justify-between items-center text-xs
-           border-t border-l border-white border-r border-b border-win98-gray-dark;
+    flex justify-between items-center text-xs
+    border-t border-l border-white border-r border-b border-win98-gray-dark;
   }
 
   .title-bar-button-win98 {
     @apply bg-win98-gray-light border-t border-l border-white border-r border-b border-win98-gray-medium
-           w-5 h-4 flex items-center justify-center text-black cursor-pointer
-           text-shadow-win98 btn-win98-active;
+    w-5 h-4 flex items-center justify-center text-black cursor-pointer
+    text-shadow-win98 btn-win98-active;
   }
-
+  
   .window-content-win98 {
     @apply bg-win98-gray-light p-4 border-2 border-solid win98-border-dark
-           text-center space-y-4;
+    text-center space-y-4;
   }
   .input-win98 {
     @apply bg-white border-2 border-solid win98-border-dark
-           p-1 text-black focus:outline-none focus:border-blue-500; /* Stili focus basilari */
+    p-1 text-black focus:outline-none focus:border-blue-500; /* Stili focus basilari */
   }
   .form-title-win98 {
     @apply text-black font-bold text-lg mb-2 text-shadow-win98; /* Un po' più grande e con ombra */
@@ -70,4 +70,60 @@ body {
   .icon-button-win98 {
     @apply text-white text-xs flex flex-col items-center justify-center;
   }
+
+}
+
+::-webkit-scrollbar {
+  width: 16px; /* Larghezza standard delle scrollbar di Win98 */
+  height: 16px; /* Altezza per scrollbar orizzontali */
+  /* Lo sfondo della scrollbar (il "binario" visibile dove scorre il thumb) */
+  background: theme('colors.win98-white'); 
+  /* Bordi 3D esterni per l'intera scrollbar */
+  border-top: 1px solid theme('colors.win98-white');
+  border-left: 1px solid theme('colors.win98-white');
+  border-right: 1px solid theme('colors.win98-gray-medium');
+  border-bottom: 1px solid theme('colors.win98-gray-medium');
+}
+
+/* La TRACCIA interna della scrollbar (il "binario" più profondo) */
+::-webkit-scrollbar-track {
+  /* Questo crea l'effetto di "incavo" all'interno della scrollbar */
+  border-top: 1px solid theme('colors.win98-gray-dark');
+  border-left: 1px solid theme('colors.win98-gray-dark');
+  border-right: 1px solid theme('colors.win98-white');
+  border-bottom: 1px solid theme('colors.win98-white');
+  background-color: theme('colors.win98-gray-extraLight'); /* Sfondo della traccia */
+}
+
+/* Il THUMB (la maniglia che si muove) */
+::-webkit-scrollbar-thumb {
+  background-color: theme('colors.win98-gray-light'); /* Colore base del thumb */
+  /* Bordi 3D del thumb (effetto pulsante) */
+  border-top: 2px solid theme('colors.win98-white');
+  border-left: 2px solid theme('colors.win98-white');
+  border-right: 2px solid theme('colors.win98-gray-medium');
+  border-bottom: 2px solid theme('colors.win98-gray-medium');
+  border-radius: 0; /* Le scrollbar Win98 non avevano bordi arrotondati */
+  min-height: 40px; /* Assicurati che il thumb sia visibile */
+}
+
+/* Effetto HOVER sul thumb */
+::-webkit-scrollbar-thumb:hover {
+  background-color: theme('colors.win98-gray-medium'); /* Si scurisce leggermente */
+}
+
+/* Effetto ACTIVE/CLICK sul thumb (quando viene premuto) */
+::-webkit-scrollbar-thumb:active {
+  background-color: theme('colors.win98-gray-dark'); /* Diventa ancora più scuro */
+  /* Bordi invertiti per l'effetto "pressato" */
+  border-top: 2px solid theme('colors.win98-gray-medium');
+  border-left: 2px solid theme('colors.win98-gray-medium');
+  border-right: 2px solid theme('colors.win98-white');
+  border-bottom: 2px solid theme('colors.win98-white');
+}
+
+/* L'angolo in basso a destra dove le scrollbar si incontrano (se entrambe presenti) */
+::-webkit-scrollbar-corner {
+  background: theme('colors.win98-gray-light'); /* Sfondo dell'angolo */
+  /* Puoi aggiungere bordi simili alla traccia se vuoi */
 }
