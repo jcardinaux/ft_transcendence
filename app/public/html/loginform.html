@@ -1,0 +1,15 @@
+<div class="flex space-x-4">
+  <div>
+    <img src="/assets/login-icon.png" class="h-11 w-11">
+  </div>
+  <div>
+    <form id="login-form" class="flex flex-col gap-4">
+      <input type="text" id="username" placeholder="Username o email" class="input-win98" required />
+      <input type="password" id="password" placeholder="Password" class="input-win98" required />
+      <input type="text" id="otp" placeholder="Codice 2FA (se attivo)" class="input-win98" />
+      <button type="submit" class="btn-win98">login</button>
+      <a href="/" class="btn-win98">home</a>
+    </form>
+    <div id="login-error" class="text-red-600 mt-2 hidden"></div>
+  </div>
+</div>

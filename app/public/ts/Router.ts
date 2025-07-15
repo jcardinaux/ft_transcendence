@@ -1,15 +1,15 @@
 import { renderHomePage } from './pages/HomePage.js';
-import { renderLoginPage } from './pages/LoginPage.js';
-import { renderRegisterPage } from './pages/RegisterPage.js';
+import { renderWelcomePage } from './pages/welcomePage.js';
+import { error404page } from './pages/404.js';
+import { renderDesktopPage } from './pages/desktopPage.js';
 
 const routes: Record<string, () => void> = {
   '/': renderHomePage,
-  '/login': renderLoginPage,
-  '/register': renderRegisterPage,
+  '/welcome': renderWelcomePage,
+  '/desktop': renderDesktopPage,
 };
 
 export function initRouter() {
-  // gestione link cliccati
   document.body.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (target.matches('[data-link]')) {
@@ -18,13 +18,9 @@ export function initRouter() {
       navigateTo(path);
     }
   });
-
-  // gestione navigazione browser (back/forward)
   window.addEventListener('popstate', () => {
     render(window.location.pathname);
   });
-
-  // prima render
   render(window.location.pathname);
 }
 
@@ -34,6 +30,6 @@ function navigateTo(path: string) {
 }
 
 function render(path: string) {
-  const view = routes[path] || renderHomePage;
+  const view = routes[path] || error404page;
   view();
 }

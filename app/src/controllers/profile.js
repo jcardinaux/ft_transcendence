@@ -10,12 +10,20 @@ import { REPL_MODE_SLOPPY } from 'repl'
 export const updateUserName = async (req, reply) => {
 	const {id} = req.user
 	const {username} = req.body
-	const stmt = reply.server.db.prepare('UPDATE users SET username = ? WHERE id = ?')
-	const response = stmt.run(username, id)
-
-	if(response.changes === 0)
-		reply.code(404).send({message: "no user founded "})
-	reply.send({message: `user ${id} are now ${username}`})
+	try{
+		const stmt = reply.server.db.prepare('UPDATE users SET username = ? WHERE id = ?')
+		const response = stmt.run(username, id)
+		if(response.changes === 0)
+			reply.code(404).send({message: "no user founded "})
+		reply.send({message: `user ${id} are now ${username}`})
+	}
+	catch (err) {
+		let errorMessage = err.message
+		if(err.message.includes('SQLITE_CONSTRAINT_UNIQUE') || err.message.includes('UNIQUE constraint failed'))
+			if (err.message.includes('users.username'))
+                    errorMessage = 'this username are not avaiable';
+		reply.code(500).send({message: errorMessage});
+	}
 }
 
 
@@ -60,7 +68,7 @@ export const showAllUseriInfo = async (req, reply) => {
 	const stmt = reply.server.db.prepare('SELECT * FROM users WHERE id = ?')
 	const user = stmt.get(id)
 
-	const avatar = user.avatar || '/public/avatar/fallback_avatar.png'
+	const avatar = user.avatar || '/avatar/fallback_avatar.png'
 	reply.send({...user, avatar})
 }
 
@@ -109,7 +117,7 @@ export const uploadAvatar = async (req, reply) => {
 
 	await pipeline(file.file, fs.createWriteStream(filePath))
 
-	const avatarUrl = `/public/avatar/${filename}`
+	const avatarUrl = `/avatar/${filename}`
 	req.server.db.prepare('UPDATE users SET avatar = ? WHERE id = ?').run(avatarUrl, id)
 
 	reply.send({ message: 'Avatar uploaded', url: avatarUrl })
