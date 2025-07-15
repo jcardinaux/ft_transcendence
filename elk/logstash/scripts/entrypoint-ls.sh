@@ -7,7 +7,7 @@ set -e
 # chmod 666 /logs/*.log
 
 # 2) Wait for Elasticsearch to be ready
-while ! curl -s -u "elastic:${ELASTIC_PASSWORD}" "http://elasticsearch:9200" >/dev/null; do
+while ! curl -s -k --cert /shared-certs/logstash/logstash-cert.pem --key /shared-certs/logstash/logstash-key.pem -u "elastic:${ELASTIC_PASSWORD}" "https://elasticsearch:9200" >/dev/null; do
   echo "Waiting for Elasticsearch..."
   sleep 5
 done

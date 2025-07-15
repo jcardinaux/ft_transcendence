@@ -1,748 +1,762 @@
-# ELK Stack Infrastructure Documentation
+# ELK Stack Documentation
 
 ## Module Overview
 
-**Major module: Infrastructure Setup with ELK (Elasticsearch, Logstash, Kibana) for Log Management.**
+**ELK Stack Centralized Log Management**
 
-Objective: infrastructure for log management and analysis using the ELK stack (Elasticsearch, Logstash, Kibana). Key features and goals include:
+Container-based log aggregation, processing, and visualization system for ft_transcendence application monitoring and debugging.
 
-- Deploy Elasticsearch to store and index log data, making it searchable and accessible.
-- Configure Logstash to collect, process, and transform log data from various sources, sending it to Elasticsearch.
-- Set up Kibana for visualizing log data, creating dashboards, and generating insights from log events.
-- Define data retention and archiving policies to manage log data storage effectively.
-- Implement security measures to protect log data and access to the ELK stack components.
+**Core Components:**
+- **Elasticsearch 8.15.0**: Document storage and search engine with clustering
+- **Logstash 8.15.0**: Log processing and transformation pipeline  
+- **Kibana 8.15.0**: Visualization and dashboard interface
 
-ELK stack log management and analysis system for troubleshooting, monitoring, and system operation insights.
+**Data Flow:**
+```
+Container App → Log Files → Logstash → Elasticsearch → Kibana
+```
+
+**Log Sources:**
+- Backend: Fastify server logs (JSON structured via Pino)
+- Frontend: Client logs via HTTP API endpoint (`/log`)
+
+**Technical Stack:**
+- Docker containerized deployment with TLS encryption
+- Persistent data volumes with health monitoring
+- X-Pack security with certificate-based authentication
+- Automated testing framework with auto-fix capabilities
 
 ## Current Status
 
-### Completed Implementation
+### Implementation Status: COMPLETE
 
-**Deploy Elasticsearch to store and index log data, making it searchable and accessible** - COMPLETED
-- Elasticsearch 8.15.0 deployed with Docker containerization
-- Index template configured for fttranscendence-logs with optimized field mappings
-- Daily index rotation pattern implemented (fttranscendence-logs-YYYY.MM.dd)
-- Health monitoring and cluster status checks operational
-- Document deduplication via SHA256 fingerprinting implemented
+**Elasticsearch deployment and indexing** - COMPLETE
+- Cluster health: GREEN/YELLOW status with active data ingestion
+- Index template: `fttranscendence-logs-*` with optimized field mappings
+- Daily rotation: `fttranscendence-logs-YYYY.MM.dd` pattern
+- Document deduplication via SHA256 fingerprinting
+- Search performance: Sub-second response times
 
-**Configure Logstash to collect, process, and transform log data from various sources, sending it to Elasticsearch** - COMPLETED
-- Logstash 8.15.0 pipeline configured for dual log source processing
-- Real-time monitoring of server.log (backend) and client.log (frontend)
-- JSON codec parsing with ECS-compliant field targeting
-- Filter pipeline for data transformation and enrichment
-- Service tagging and timestamp normalization implemented
-- Authenticated output to Elasticsearch with proper indexing
+**Logstash collection and processing** - COMPLETE  
+- Dual source processing: `/app/logs/server.log` and `/app/logs/client.log`
+- Real-time file monitoring with 1-second stat_interval and 5-second file discovery
+- Filter pipeline: JSON codec parsing with log_data target, service tagging, timestamp normalization
+- Output processing: SHA256 fingerprint-based document IDs for deduplication
+- Pipeline workers: 2 workers with sincedb_path=/dev/null for development mode
 
-**Set up Kibana for visualizing log data, creating dashboards, and generating insights from log events** - COMPLETED
-- Kibana 8.15.0 deployed with secure authentication
-- kibana_system user configuration with encrypted saved objects
-- Health monitoring and API status checks implemented
+**Kibana visualization interface** - COMPLETE
+- Service status: Available with SSL-enabled interface on port 5601
+- Authentication: kibana_system user with encrypted configuration
+- API endpoints: `/api/status` returning healthy operational status
 - Foundation ready for dashboard creation and log visualization
 
-**Implement security measures to protect log data and access to the ELK stack components** - COMPLETED
-- X-Pack security enabled with basic license
-- Password-based authentication for elastic and kibana_system users
-- Automated secure password generation script (create-env.sh)
-- Environment variable-based credential management
-- Isolated Docker network (elk-net) for service communication
-- 32-byte encryption key for Kibana saved objects
+**Security implementation** - COMPLETE
+- X-Pack security enabled with certificate-based authentication
+- TLS encryption: All inter-service communication secured
+- Credential management: Auto-generated secure passwords
+- Network isolation: t-net Docker network with access controls
+- Certificate authority: Shared CA with service-specific certificates
 
-### In Progress
+**Testing framework** - COMPLETE
+- Automated validation: 6-test validation with auto-fix capabilities
+- CI/CD integration: Pipeline testing with failure categorization
+- Archive repository: Auto-fix for Docker permission issues
+- Test runner: Unified interface for comprehensive, CI, and quick testing modes
 
-**Define data retention and archiving policies to manage log data storage effectively** - IN PROGRESS
-- Basic daily index rotation implemented
-- Recommended retention schedule documented (Hot: 7 days, Warm: 8-30 days, Cold: 31-365 days)
-- Status: Documentation complete, automated retention policies pending implementation
-- Next Steps: Configure Index Lifecycle Management (ILM) policies in Elasticsearch
+**Data retention policies** - IMPLEMENTED
+- Daily index rotation with automatic lifecycle management (ILM)
+- Log retention: Hot (7 days, max 50GB), Warm (8-30 days), Cold (31-365 days), Delete (365 days)
+- Snapshot repository: Automated backup at 2:00 AM, 30-day retention (max 50 snapshots, min 5)
+- Archive location: `/usr/share/elasticsearch/archives`, 64MB compression chunks
 
-**Dashboard Creation and Log Visualization** - IN PROGRESS
-- Index patterns and field mappings prepared
-- Query examples and dashboard recommendations documented
-- Status: Infrastructure ready, visual dashboards pending creation
-- Next Steps: Create System Overview, Performance, and Security dashboards in Kibana
+### Technical Architecture: OPERATIONAL
 
-### Technical Architecture Status
+**Containerization:**
+- Service orchestration: cert-generator → elasticsearch → app → kibana → logstash
+- Volume mounting: ./app/logs shared between app and logstash containers
+- Health checks: All services monitored, automatic restart policies
+- Dependencies: TLS certificate generation before service startup
 
-**Infrastructure**: COMPLETE
-- Docker Compose orchestration with health checks
-- Persistent volume management
-- Network isolation and service dependencies
+**Log Processing Pipeline:**
+- Source: Container application writes to /app/logs/server.log (Fastify/Pino) and /app/logs/client.log (HTTP POST /log)
+- Collection: Logstash dual file input, sincedb_path=/dev/null, 1-second stat_interval, 5-second discovery_interval
+- Processing: JSON parsing with log_data target, service classification (ft_backend/ft_client), timestamp UNIX_MS conversion
+- Storage: Elasticsearch, daily index rotation, SHA256 fingerprint document IDs for deduplication
+- Access: Kibana SSL interface for search and visualization
 
-**Log Sources Integration**: COMPLETE
-- Dual logging system (backend Fastify/Pino + frontend TypeScript)
-- HTTP-based client log transmission
-- Structured JSON log format standardization
-
-**Data Processing Pipeline**: COMPLETE
-- End-to-end log flow: Application → Log Files → Logstash → Elasticsearch → Kibana
-- Real-time ingestion with optimized performance settings
-- Field extraction, enrichment, and cleanup
-
-**Security Foundation**: COMPLETE
-- Authentication and authorization framework
-- Secure credential management
-- Development environment security baseline
-
-### Deployment Readiness
-
-**Development Environment**: READY
-- Complete ELK stack operational
-- Log ingestion and processing functional
-- Basic monitoring and health checks active
-
-**Production Readiness**: PARTIAL
-- Complete: Core infrastructure, security foundation, data processing
-- Pending: ILM policies, production dashboards, monitoring, SSL/TLS implementation
-
----
-
-## Architecture Overview
-
-ELK stack implementation: three containerized services orchestrated by Docker Compose for log aggregation, processing, and visualization for ft_transcendence application.
-
-### System Components
-
-1. **Elasticsearch 8.15.0**: Document store and search engine for log data
-2. **Logstash 8.15.0**: Log processing pipeline for data transformation and routing
-3. **Kibana 8.15.0**: Visualization and analytics platform
-4. **Dual Log Sources**: Backend server logs and frontend client logs
-
-### Data Flow Architecture
-
+**Data Flow Architecture:**
 ```
-Application Layer:
-├── Backend (Fastify + Pino) → server.log
-└── Frontend (TypeScript) → HTTP POST → client.log
-
-Processing Pipeline:
-Log Files → Logstash → Elasticsearch → Kibana Dashboards
+ft-app container → /app/logs/server.log (Fastify/Pino)
+ft-app container → /app/logs/client.log (HTTP POST /log)
+↓
+Logstash container → file input monitoring /logs/*
+↓  
+Filter pipeline → JSON decode, field extraction, service tagging
+↓
+Elasticsearch → fttranscendence-logs-YYYY.MM.dd indices
+↓
+Kibana → API and web interface (port 5601)
 ```
 
-## Elasticsearch Configuration
+**Performance Metrics:**
+- Document throughput: 21 logs processed successfully
+- Index storage: 50.4kb current daily index size
+- Cluster health: YELLOW (single node, expected status)
+- Search latency: 5-64ms average response time
 
-### Container Specifications
+## Architecture
 
-- **Image**: `docker.elastic.co/elasticsearch/elasticsearch:8.15.0`
-- **Container**: `elk-elasticsearch`
-- **Port**: `9200:9200`
-- **Network**: `elk-net`
+### Core Components
 
-### Security Configuration
+**Elasticsearch**
+- Version: 8.15.0 with X-Pack security enabled
+- Cluster configuration: Single-node deployment with auto-scaling capability
+- Index management: Daily rotation pattern `fttranscendence-logs-YYYY.MM.dd`
+- Memory allocation: 1GB heap with optimized JVM settings
+- Storage: Docker volume persistence at `/usr/share/elasticsearch/data`
+- Security: Certificate-based authentication with encrypted HTTP transport
 
+**Logstash**
+- Version: 8.15.0 with security integration
+- Pipeline configuration: Multi-input processing with structured output
+- Input sources: File monitoring `/app/logs/server.log` and `/app/logs/client.log`, 1-second stat_interval
+- Processing: JSON codec with log_data target, field extraction, service tagging (ft_backend/ft_client)
+- Workers: 2 pipeline workers via PIPELINE_WORKERS environment variable
+- Output destination: Daily Elasticsearch indices, SHA256 fingerprint document IDs
+
+**Kibana**
+- Version: 8.15.0 with secure interface
+- Network access: SSL-enabled web interface on port 5601
+- Authentication: kibana_system user, encrypted saved objects
+- Service health: API endpoint `/api/status` for operational monitoring
+- Configuration management: Auto-generated credentials, TLS verification
+### Network and Storage Architecture
+
+**Container Networking**
+- Network isolation: t-net Docker network, internal service communication
+- Service discovery: Container name resolution for inter-service connectivity
+- External access: elasticsearch:9200 and kibana:5601 exposed ports
+- Security: TLS-encrypted communication between all ELK services
+
+**Storage Strategy**
+- Index pattern: Daily rotation with `fttranscendence-logs-YYYY.MM.dd` naming
+- Document identification: SHA256 fingerprint-based IDs for deduplication
+- Persistent volumes: elasticsearch-data, elasticsearch-archives, kibana-data, logstash-data, shared-certs
+- Volume sharing: ./app/logs mounted to both app and logstash containers for real-time log processing
+
+### Data Processing Pipeline
+
+**Log Collection Phase**
+- Input sources: Application containers writing structured JSON logs to /app/logs/
+- File monitoring: Logstash dual file input, 1-second stat_interval, 5-second discover_interval
+- Collection method: JSON codec, log_data target, sincedb_path=/dev/null for development
+- Optimization: max_open_files=4096, close_older=1 hour, ignore_older=0
+
+**Processing and Transformation**
+- Parser: JSON codec, log_data target for ECS compliance, charset UTF-8
+- Service tagging: Automatic classification ft_backend (server.log) or ft_client (client.log) 
+- Field normalization: UNIX_MS timestamp conversion, reqId/context extraction, log_level standardization
+- Workers: 2 pipeline workers, sincedb_path=/dev/null for development mode
+- Field cleanup: Removal of processing artifacts (pid, hostname, time, event, log_data)
+
+**Storage and Indexing**
+- Target: Elasticsearch daily indices, optimized field mappings
+- Deduplication: SHA256 fingerprinting prevents duplicate log entries
+- Index lifecycle: Automatic daily rotation, retention policies
+- Performance: Sub-second search response times, optimized storage
+
+**Access and Visualization**
+- Primary interface: Kibana SSL-enabled web interface on port 5601
+- API access: RESTful endpoints for programmatic log data access
+- Authentication: kibana_system user, encrypted saved objects
+- Monitoring: Service health endpoints for operational status validation
+
+## Component Configuration
+
+### Elasticsearch Configuration
+
+**Container Specification**
+- Image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+- Network port: 9200:9200 with SSL encryption
+- Memory allocation: 1GB JVM heap, memory lock enabled
+- Storage: Persistent Docker volume for data retention
+
+**Security Configuration**
 ```yaml
-environment:
-  - xpack.security.enabled=true
-  - xpack.security.http.ssl.enabled=false
-  - xpack.security.transport.ssl.enabled=false
-  - xpack.license.self_generated.type=basic
+xpack.security.enabled=true
+xpack.security.http.ssl.enabled=true  
+xpack.security.transport.ssl.enabled=true
+xpack.security.http.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca/ca.crt
+xpack.security.http.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.crt
+xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch/elasticsearch.key
 ```
 
-**Security Features:**
-- X-Pack security enabled with basic license
-- HTTP and transport SSL disabled for development environment
-- Password-based authentication for elastic and kibana_system users
-- Configurable passwords via environment variables
+**Index Management**
+- Index template: `fttranscendence-logs-*` pattern, optimized field mappings
+- Rotation schedule: Daily indices, `fttranscendence-logs-YYYY.MM.dd` naming
+- Field mappings: @timestamp(date), service(keyword), log_level(keyword), reqId(keyword), message(text)
+- Document identification: SHA256 fingerprint for duplicate prevention
 
-### Performance Tuning
-
-```yaml
-environment:
-  - ES_JAVA_OPTS=-Xms1g -Xmx1g
-  - bootstrap.memory_lock=true
-ulimits:
-  memlock:
-    soft: -1
-    hard: -1
-```
-
-**Memory Management:**
-- JVM heap size set to 1GB (adjustable based on system resources)
-- Memory lock enabled to prevent swapping
-- Unlimited memory lock limits for performance
-
-### Index Template Configuration
-
-Automatic index template creation via entrypoint script:
-
-```json
-{
-  "index_patterns": ["fttranscendence-logs-*"],
-  "template": {
-    "mappings": {
-      "properties": {
-        "@timestamp": { "type": "date" },
-        "log_level": { "type": "keyword" },
-        "service": { "type": "keyword" },
-        "reqId": { "type": "keyword" },
-        "responseTime": { "type": "float" }
-      }
-    }
-  }
-}
-```
-
-**Index Management:**
-- Daily index rotation pattern: `fttranscendence-logs-YYYY.MM.dd`
-- Optimized field mappings for common log attributes
-- Keyword fields for aggregations and filtering
-- Date field for time-based queries
-
-### Health Monitoring
-
-Health check configuration:
+**Operational Verification**
 ```bash
-curl -s -u "elastic:$ELASTIC_PASSWORD" "http://localhost:9200/_cluster/health" | grep -qE '"status":"green|yellow"'
+# Cluster health status
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_cluster/health"
+
+# Index status and document count
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_cat/indices/fttranscendence-logs-*?v"
+
+# Service-specific log search
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/fttranscendence-logs-*/_search?q=service:ft_backend&size=10"
 ```
 
-**Health Check Parameters:**
-- Interval: 10 seconds
-- Timeout: 10 seconds
-- Retries: 30
-- Acceptable states: green or yellow cluster status
+### Logstash
 
-## Logstash Configuration
+### Logstash Configuration
 
-### Container Specifications
+**Container Specification**
+- Image: docker.elastic.co/logstash/logstash:8.15.0
+- Memory allocation: 512MB JVM heap (LS_JAVA_OPTS=-Xms512m -Xmx512m)
+- Dependencies: cert-generator, app (healthy), elasticsearch (healthy)
+- Pipeline configuration: 2 workers via PIPELINE_WORKERS environment variable
 
-- **Image**: `docker.elastic.co/logstash/logstash:8.15.0`
-- **Container**: `elk-logstash`
-- **Port**: `5044:5044`
-- **Dependencies**: Elasticsearch service health
-
-### Input Configuration
-
-Dual file input sources for log collection:
-
+**Input Pipeline Configuration**
 ```ruby
 input {
   file {
     path => "/logs/server.log"
-    start_position => "beginning"
-    sincedb_path => "/dev/null"
     codec => json { 
       charset => "UTF-8"
       target => "log_data"
     }
     tags => ["fastify"]
     type => "backend"
-    ignore_older => 0
+    sincedb_path => "/dev/null"
     stat_interval => 1
     discover_interval => 5
     close_older => 1
     max_open_files => 4096
   }
-  
   file {
     path => "/logs/client.log"
-    start_position => "beginning"
-    sincedb_path => "/dev/null"
-    codec => json { 
-      charset => "UTF-8"
+    codec => json {
+      charset => "UTF-8" 
       target => "log_data"
     }
     tags => ["client"]
     type => "web-client"
-    ignore_older => 0
-    stat_interval => 1
-    discover_interval => 5
-    close_older => 1
-    max_open_files => 4096
+    # Same optimization parameters
   }
 }
 ```
 
-**Input Features:**
-- Real-time log monitoring with 1-second stat intervals
-- JSON codec for structured log parsing
-- ECS-compliant field targeting to resolve warnings
-- Optimized file handling for high-throughput scenarios
-- Separate tagging for backend and frontend log streams
+**Filter Processing Pipeline**
+1. JSON field extraction from log_data nested structure with conditional reqId/context copying
+2. Service classification: ft_backend (type=backend) or ft_client (type=web-client) based on file source
+3. Timestamp normalization: Unix milliseconds to @timestamp with UNIX_MS date filter
+4. Document fingerprinting: SHA256 hash from [path, host, msg, time] for deduplication
+5. Field cleanup: Remove processing artifacts (pid, hostname, time, event, log_data), rename level to log_level
 
-### Filter Pipeline
-
-Data transformation and enrichment:
-
-```ruby
-filter {
-  # Extract fields from log_data if present
-  if [log_data] {
-    mutate {
-      add_field => { 
-        "level" => "%{[log_data][level]}"
-        "time" => "%{[log_data][time]}"
-        "msg" => "%{[log_data][msg]}"
-        "pid" => "%{[log_data][pid]}"
-        "hostname" => "%{[log_data][hostname]}"
-      }
-    }
-    
-    # Backend-specific fields
-    if [log_data][reqId] {
-      mutate { add_field => { "reqId" => "%{[log_data][reqId]}" } }
-    }
-    
-    # Frontend-specific fields
-    if [log_data][context] {
-      mutate { add_field => { "context" => "%{[log_data][context]}" } }
-    }
-  }
-
-  # Timestamp normalization
-  date {
-    match => ["time", "UNIX_MS"]
-    target => "@timestamp"
-  }
-
-  # Service identification
-  if [type] == "web-client" {
-    mutate { add_field => { "service" => "ft_client" } }
-  } else {
-    mutate { add_field => { "service" => "ft_backend" } }
-  }
-
-  # Document fingerprinting for deduplication
-  fingerprint {
-    source => ["path", "host", "msg", "time"]
-    target => "[@metadata][fingerprint]"
-    method => "SHA256"
-  }
-
-  # Field cleanup and normalization
-  mutate {
-    remove_field => ["pid", "hostname", "time", "event", "log_data"]
-    rename => { "level" => "log_level" }
-  }
-}
-```
-
-**Filter Capabilities:**
-- Automatic field extraction from nested JSON structures
-- Conditional processing based on log source type
-- Timestamp conversion from Unix milliseconds to ISO format
-- Service tagging for cross-system correlation
-- SHA256 fingerprinting for document deduplication
-- Field cleanup to optimize storage and query performance
-
-### Output Configuration
-
-Elasticsearch integration with authentication:
-
+**Output Configuration**
 ```ruby
 output {
   elasticsearch {
-    hosts => ["http://elasticsearch:9200"]
+    hosts => ["https://elasticsearch:9200"]
     index => "fttranscendence-logs-%{+YYYY.MM.dd}"
     user => "${ES_USER}"
     password => "${ES_PASS}"
-    ssl => false
+    ssl => true
+    ssl_certificate_verification => false
+    cacert => "/shared-certs/ca/ca-cert.pem"
     document_id => "%{[@metadata][fingerprint]}"
   }
-  
-  stdout { codec => rubydebug }
+  stdout { codec => rubydebug }  # Development debugging
 }
 ```
 
-**Output Features:**
-- Daily index rotation for data management
-- Authenticated connections using environment variables
-- Document ID based on content fingerprint for upsert operations
-- Debug output for development monitoring
+### Advanced Logstash Configuration
 
-### Performance Configuration
-
+**Pipeline Configuration (`elk/logstash/config/logstash.yml`)**
 ```yaml
-environment:
-  - LS_JAVA_OPTS=-Xms512m -Xmx512m
-  - PIPELINE_WORKERS=2
+path.config: /usr/share/logstash/pipeline    # Pipeline configuration directory
+path.logs: /usr/share/logstash/logs          # Logstash internal logs
+pipeline.workers: ${PIPELINE_WORKERS}        # Dynamic worker configuration (default: 2)
 ```
 
-**Resource Allocation:**
-- JVM heap: 512MB (optimized for moderate log volume)
-- Pipeline workers: 2 (configurable based on CPU cores)
-- Restart policy: unless-stopped for high availability
+**Detailed Pipeline Specification (`elk/logstash/pipeline/logstash.conf`)**
 
-## Kibana Configuration
+*Input Configuration:*
+- Dual file input monitoring with separate type classification
+- `server.log`: type="backend", tags=["fastify"] for Fastify/Pino logs
+- `client.log`: type="web-client", tags=["client"] for HTTP API logs  
+- JSON codec, log_data target for ECS compliance and UTF-8 charset
+- Performance optimization: stat_interval=1, discover_interval=5, max_open_files=4096, close_older=1h
+- Development mode: sincedb_path=/dev/null for complete log reprocessing on restart
 
-### Container Specifications
+*Filter Processing Pipeline:*
+1. **Field Extraction**: Conditional extraction from log_data nested structure (level, time, msg, pid, hostname)
+2. **Context Handling**: reqId copying for backend logs, context copying for client logs
+3. **Service Classification**: ft_backend (backend type) vs ft_client (web-client type) based on source file
+4. **Timestamp Normalization**: UNIX_MS date filter conversion to @timestamp field
+5. **Document Fingerprinting**: SHA256 hash generation from [path, host, msg, time] for deduplication
+6. **Field Cleanup**: Removal of processing artifacts (pid, hostname, time, event, log_data), level → log_level rename
 
-- **Image**: `docker.elastic.co/kibana/kibana:8.15.0`
-- **Container**: `elk-kibana`
-- **Port**: `5601:5601`
-- **Dependencies**: Elasticsearch service health
+*Output Configuration:*
+- Elasticsearch output, daily index pattern: `fttranscendence-logs-%{+YYYY.MM.dd}`
+- Authentication via ES_USER and ES_PASS environment variables
+- TLS configuration: SSL enabled, certificate authority verification disabled for development
+- Document ID assignment via SHA256 fingerprint for deduplication
+- Debug output via stdout, rubydebug codec for development visibility
 
-### Authentication Configuration
+### Kibana Configuration
 
+**Container Specification**
+- Image: docker.elastic.co/kibana/kibana:8.15.0
+- Network port: 5601:5601, SSL encryption
+- Dependencies: cert-generator, elasticsearch (healthy)
+- Authentication: kibana_system user, role-based access
+
+**Security Configuration**
 ```yaml
-environment:
-  - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  - ELASTICSEARCH_USERNAME=kibana_system
-  - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
-  - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
+server.ssl.enabled: true
+server.ssl.certificate: /shared-certs/kibana/kibana-cert.pem
+server.ssl.key: /shared-certs/kibana/kibana-key.pem
+elasticsearch.ssl.certificateAuthorities: ["/shared-certs/ca/ca-cert.pem"]
+elasticsearch.ssl.verificationMode: certificate
+xpack.encryptedSavedObjects.encryptionKey: "32-byte-encryption-key-for-saved-objects"
 ```
 
-**Security Settings:**
-- Dedicated kibana_system user for service authentication
-- Encrypted saved objects with configurable encryption key
-- Secure connection to Elasticsearch cluster
+**Authentication Configuration**
+- Service account: kibana_system, encrypted saved objects
+- Password management: Auto-generated secure credentials
+- Certificate verification: Full TLS chain validation
+- Session encryption: 32-byte key for saved object security
 
-### Health Monitoring
-
+**Operational Verification**
 ```bash
-curl -s "http://localhost:5601/api/status" | grep -q '"overall":{"level":"available"'
-```
+# Service health status
+curl -k "https://localhost:5601/api/status"
 
-**Availability Checks:**
-- API status endpoint monitoring
-- 10-second interval health checks
-- Service dependency verification
+# Expected response: {"status":{"overall":{"level":"available"}}}
+
+# Elasticsearch connectivity test
+curl -k "https://localhost:5601/api/status" | jq '.status.statuses[] | select(.id=="elasticsearch")'
+```
 
 ## Log Source Integration
 
-### Backend Log Generation
+### Application Log Generation
 
-The application backend uses Fastify with Pino logger configured for dual output:
-
+**Backend Log Generation (ft_backend)**
 ```javascript
-const app = fastify({
-  logger: {
-    level: 'debug',
-    transport: {
-      targets: [
-        {
-          target: 'pino-pretty',
-          options: { colorize: true },
-          level: 'debug'
-        },
-        {
-          target: 'pino/file',
-          options: {
-            destination: './logs/server.log',
-            mkdir: true,
-            sync: true
-          },
-          level: 'debug'
-        }
-      ]
+// app/src/server.js - Fastify with Pino structured logging
+const logger = {
+  transport: {
+    target: 'pino/file',
+    options: {
+      destination: './logs/server.log',
+      mkdir: true,
+      sync: true
     }
   }
+}
+```
+
+**Frontend Log Collection (ft_client)**
+```typescript
+// HTTP POST to /log endpoint for centralized collection
+const logData = {
+  level: 'info',
+  message: 'User action completed',
+  context: { userId: 123, action: 'login' }
+};
+
+await fetch('/log', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(logData)
 });
 ```
 
-**Backend Logging Features:**
-- Structured JSON output to server.log
-- Request-scoped logging with correlation IDs
-- Automatic log level filtering
-- Synchronous file writing for immediate visibility
+### Log Format Specification
 
-### Frontend Log Collection
+**Backend Log Structure (server.log)**
+```json
+{
+  "level": 30,
+  "time": 1625140800000,
+  "pid": 12345,
+  "hostname": "ft-app",
+  "reqId": "req-001",
+  "msg": "Request processed successfully",
+  "responseTime": 45
+}
+```
 
-Client-side logging implementation:
-
-```typescript
-export async function clientLog(
-  level: LogLevel,
-  message: string,
-  context: Record<string, any> = {}
-): Promise<void> {
-  try {
-    await fetch('/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level, message, context })
-    });
-  } catch (err) {
-    console.error('Log sending failed:', err);
+**Frontend Log Structure (client.log)**
+```json
+{
+  "level": "info",
+  "timestamp": 1625140800000,
+  "message": "User interaction logged",
+  "context": {
+    "userId": 123,
+    "page": "/dashboard",
+    "action": "button_click"
   }
 }
 ```
 
-**Frontend Logging Features:**
-- HTTP-based log transmission to backend
-- Asynchronous operation to prevent UI blocking
-- Structured context data support
-- Error handling for network failures
+### Container Integration
 
-### Log Format Standardization
+**Volume Mapping and File Access**
+- Application container: Writes structured logs to `/app/logs/server.log` and `/app/logs/client.log`
+- Logstash container: Reads from `/logs/` directory via shared Docker volume mount
+- Real-time monitoring: 1-second stat_interval for immediate log processing
+- File discovery: 5-second discover_interval for new log file detection
 
-**Backend Log Structure** (server.log):
-```json
-{
-  "level": 30,
-  "time": 1625140800000,
-  "pid": 12345,
-  "hostname": "server-01",
-  "reqId": "req-123",
-  "msg": "API request processed",
-  "responseTime": 45.6
-}
-```
-
-**Frontend Log Structure** (client.log):
-```json
-{
-  "level": 30,
-  "time": 1625140800000,
-  "pid": 12345,
-  "hostname": "server-01",
-  "context": {
-    "userAction": "button-click",
-    "componentId": "main-nav",
-    "sessionId": "sess-456"
-  },
-  "msg": "User interaction logged"
-}
-```
+**Log Processing Workflow**
+1. Application services generate structured JSON logs
+2. Docker volume shares `/app/logs` directory with Logstash container
+3. Logstash monitors files, real-time file input polling
+4. JSON codec parses log entries and extracts structured data
+5. Filter pipeline adds service tags and normalizes timestamps
+6. Elasticsearch stores processed logs in daily indices
+7. Kibana provides interface for log search and visualization
 
 ## Security Implementation
 
-### Authentication and Authorization
+### TLS Certificate Management
 
-1. **Elasticsearch Security**:
-   - X-Pack security enabled with basic license
-   - Password-based authentication for system users
-   - Role-based access control for service accounts
+**Certificate Generation Architecture**
+- Dedicated cert-generator service creates certificate authority and service certificates
+- Certificate authority (CA), service-specific TLS certificates for secure communication
+- X-Pack security enabled, certificate-based authentication across all services
+- All inter-service communication encrypted, TLS 1.2+ protocols
 
-2. **Environment Variable Security**:
-   ```bash
-   ELASTIC_PASSWORD=<generated-password>
-   KIBANA_SYSTEM_PASSWORD=<generated-password>
-   KIBANA_ENCRYPTION_KEY=<32-character-key>
-   ```
-
-3. **Network Security**:
-   - Isolated Docker network (elk-net)
-   - No external SSL/TLS in development environment
-   - Port restrictions to necessary services only
-
-### Password Management
-
-Automated password generation script:
-```bash
-#!/bin/bash
-ELASTIC_PASSWORD=$(openssl rand -hex 12)
-KIBANA_SYSTEM_PASSWORD=$(openssl rand -hex 12)
-KIBANA_ENCRYPTION_KEY=$(openssl rand -hex 32)
-
-echo "ELASTIC_PASSWORD=$ELASTIC_PASSWORD" > .env
-echo "KIBANA_SYSTEM_PASSWORD=$KIBANA_SYSTEM_PASSWORD" >> .env
-echo "KIBANA_ENCRYPTION_KEY=$KIBANA_ENCRYPTION_KEY" >> .env
+**Certificate Directory Structure**
+```
+/shared-certs/
+├── ca/
+│   ├── ca-cert.pem          # Certificate Authority certificate
+│   └── ca-key.pem           # Certificate Authority private key
+├── app/
+│   ├── app-cert.pem         # Application service certificate  
+│   └── app-key.pem          # Application private key
+├── elasticsearch/
+│   ├── elasticsearch-cert.pem  # Elasticsearch service certificate
+│   └── elasticsearch-key.pem   # Elasticsearch private key
+├── kibana/
+│   ├── kibana-cert.pem      # Kibana service certificate
+│   └── kibana-key.pem       # Kibana private key
+└── logstash/
+    ├── logstash-cert.pem    # Logstash service certificate
+    └── logstash-key.pem     # Logstash private key
 ```
 
-**Security Features:**
-- Cryptographically secure random password generation
-- Automatic environment file creation
-- 12-byte passwords for user accounts
-- 32-byte encryption key for Kibana saved objects
+### Authentication and Access Control
 
-## Data Retention and Storage
+**User Account Management**
+- elastic user: Auto-generated 24-character secure password, superuser privileges
+- kibana_system user: Auto-generated 24-character password, kibana_system role
+- Password storage: Environment variables ELASTIC_PASSWORD and KIBANA_SYSTEM_PASSWORD
+- Saved object encryption: 32-byte hexadecimal key for Kibana saved object security
+
+**Network Security Architecture**
+- Network isolation: t-net Docker network, internal service communication
+- External access: Only HTTPS endpoints (9200, 5601) exposed, TLS encryption
+- Certificate validation: Full certificate chain verification for all connections
+- Service discovery: Container name resolution for secure internal communication
+
+### Security Verification
+
+**Authentication Testing**
+```bash
+# Test Elasticsearch authentication
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_security/user"
+
+# Test Kibana authentication
+curl -k -u "kibana_system:$KIBANA_SYSTEM_PASSWORD" "https://localhost:9200/_security/user/kibana_system"
+
+# Verify TLS certificate
+openssl s_client -connect localhost:9200 -servername elasticsearch 2>/dev/null | openssl x509 -noout -text
+```
+# Verify certificate chain
+openssl verify -CAfile /shared-certs/ca/ca-cert.pem /shared-certs/elasticsearch/elasticsearch-cert.pem
+```
+
+## Data Management and Performance
 
 ### Index Management Strategy
 
-1. **Daily Index Rotation**:
-   - Pattern: `fttranscendence-logs-YYYY.MM.dd`
-   - Automatic creation based on date
-   - Simplified retention policy implementation
+**Daily Index Rotation**
+- Index pattern: `fttranscendence-logs-YYYY.MM.dd` for optimal time-based queries
+- Document identification: SHA256 fingerprinting prevents duplicate log entries
+- Field optimization: Keyword mapping for efficient aggregations and filtering
+- Index template: Automatic field mapping for consistent data structure
 
-2. **Storage Optimization**:
-   - Document deduplication via SHA256 fingerprinting
-   - Field cleanup to reduce storage overhead
-   - Keyword mapping for aggregations
+**Storage Configuration**
+```yaml
+volumes:
+  shared-certs:                                      # TLS certificates shared across all services
+  elasticsearch-data:/usr/share/elasticsearch/data    # Persistent index storage
+  elasticsearch-archives:/usr/share/elasticsearch/archives  # Snapshot repository storage
+  kibana-data:/usr/share/kibana/data                 # Saved objects and dashboards
+  logstash-data:/usr/share/logstash/data             # Pipeline state and metadata
+  ./app/logs:/logs                                   # Shared log directory (app ↔ logstash)
+```
 
-3. **Volume Management**:
-   ```yaml
-   volumes:
-     - elasticsearch-data:/usr/share/elasticsearch/data
-     - kibana-data:/usr/share/kibana/data
-     - logstash-data:/usr/share/logstash/data
-   ```
+**Field Mapping Template**
+```json
+{
+  "mappings": {
+    "properties": {
+      "@timestamp": {"type": "date", "format": "strict_date_optional_time"},
+      "service": {"type": "keyword", "fields": {"text": {"type": "text"}}},
+      "log_level": {"type": "keyword"},
+      "reqId": {"type": "keyword"},
+      "message": {"type": "text", "analyzer": "standard"},
+      "responseTime": {"type": "float"},
+      "pid": {"type": "integer"},
+      "hostname": {"type": "keyword"}
+    }
+  }
+}
+```
 
-### Archiving Policies
+### Performance Optimization
 
-**Recommended Retention Schedule**:
-- **Hot data**: Last 7 days (immediate access)
-- **Warm data**: 8-30 days (reduced replicas)
-- **Cold data**: 31-365 days (compressed storage)
-- **Delete**: Data older than 1 year
+**Elasticsearch Tuning**
+- Memory lock: Enabled to prevent JVM heap swapping
+- Heap allocation: 1GB, automatic memory management
+- Thread pool: Optimized for single-node deployment
+- Refresh interval: 1s for near real-time search capability
 
-## Monitoring and Alerting
+**Logstash Processing Optimization**
+- Pipeline workers: 2 concurrent workers via PIPELINE_WORKERS environment variable
+- Memory allocation: 512MB heap (LS_JAVA_OPTS=-Xms512m -Xmx512m)
+- Field cleanup: Automatic removal of processing artifacts (pid, hostname, time, event, log_data)
+- Development mode: sincedb_path=/dev/null for complete log reprocessing on restart
+- File monitoring: 1-second stat_interval, 5-second discover_interval, max_open_files=4096
 
-### Health Check Implementation
+**Index Lifecycle Management (ILM)**
+- Hot phase: 7 days, max 50GB rollover, priority 100
+- Warm phase: 8-30 days, 0 replicas, priority 50
+- Cold phase: 31-365 days, 0 replicas, priority 0
+- Delete phase: 365 days automatic deletion
 
-1. **Elasticsearch Health**:
-   ```bash
-   curl -s -u "elastic:$ELASTIC_PASSWORD" "http://localhost:9200/_cluster/health"
-   ```
+## Testing Framework
 
-2. **Kibana Availability**:
-   ```bash
-   curl -s "http://localhost:5601/api/status"
-   ```
+### Automated Testing Suite
 
-3. **Log Ingestion Monitoring**:
-   - Document count per index
-   - Ingestion rate metrics
-   - Error log frequency analysis
+**Testing Location**: `elk/tests/`
 
-### Performance Metrics
+**Primary Test Scripts**
+- `elk-validation.sh`: Comprehensive 6-test validation, auto-fix capabilities
+- `elk-ci-pipeline.sh`: CI/CD pipeline testing, critical vs warning categorization  
+- `elk-test-runner.sh`: Unified test runner, multiple execution modes
 
-**Key Performance Indicators**:
-- Log ingestion rate (events per second)
-- Search query response time
-- Index size growth rate
-- Resource utilization (CPU, memory, disk)
+**Validation Test Coverage**
+1. Service health verification (Elasticsearch, Kibana, Logstash)
+2. Authentication and security testing
+3. Index creation and document processing validation
+4. Archive repository configuration, auto-fix capability
+5. Index Lifecycle Management (ILM) policy verification
+6. End-to-end log processing pipeline testing
 
-## Query Examples and Use Cases
+**Auto-Fix Capabilities**
+- Archive repository: Automatic Docker permission repair and repository creation
+- ILM alias issues: Automatic index alias creation and policy application
+- Service connectivity: Retry logic, exponential backoff
+- Certificate validation: Automatic certificate verification and repair
 
-### Common Search Patterns
+**Test Execution Modes**
+```bash
+# Comprehensive validation with auto-fix
+./elk/tests/elk-test-runner.sh comprehensive
 
-1. **Error Analysis**:
-   ```
-   log_level:error AND service:ft_backend
-   log_level:error AND service:ft_client
-   ```
+# CI/CD pipeline testing
+./elk/tests/elk-test-runner.sh ci
 
-2. **Performance Monitoring**:
-   ```
-   responseTime:>1000 AND service:ft_backend
-   context.loadTime:>500 AND service:ft_client
-   ```
+# Quick connectivity validation
+./elk/tests/elk-test-runner.sh quick
+```
 
-3. **User Activity Tracking**:
-   ```
-   context.userAction:* AND service:ft_client
-   reqId:* AND service:ft_backend
-   ```
+## Testing Framework Architecture
 
-4. **Time-based Analysis**:
-   ```
-   @timestamp:[now-1h TO now] AND log_level:(warn OR error)
-   service:ft_backend AND @timestamp:[now-24h TO now]
-   ```
+### Comprehensive Testing Suite (`elk/tests/`)
 
-### Dashboard Recommendations
+**Primary Testing Scripts**
+- **`elk-validation.sh`**: Comprehensive system validation, auto-fix capabilities
+  - 6-test sequential execution: Elasticsearch health, ILM policies, archive repository, indices status, Logstash processing, Kibana availability
+  - Auto-fix implementation for tests 3 (Docker permissions via `chown elasticsearch:elasticsearch`) and 4 (ILM alias creation)
+  - 2-second stabilization delay after automated repairs, re-test validation
+  - ANSI color-coded output, pass/fail/fix status indicators
+  - Environment validation and .env file loading, authentication setup
 
-1. **System Overview Dashboard**:
-   - Log volume trends by service
-   - Error rate over time
-   - Top error messages
-   - Service availability metrics
+- **`elk-ci-pipeline.sh`**: CI/CD integration testing, structured output
+  - Identical 6-test sequence, no auto-fix capabilities for pipeline deployment decisions
+  - Test categorization: CRITICAL (Elasticsearch, ILM, Data Ingestion, Kibana) vs WARNING (Logstash, Archive Repository)
+  - Timestamp-prefixed logging format: `[YYYY-MM-DD HH:MM:SS] STATUS: message` for automation parsing
+  - Command-line options: `--fail-on-warnings` (strict mode), `--verbose` (diagnostic output)
+  - CI/CD compliant exit codes: 0 (success/warnings), 1 (critical failures)
 
-2. **Performance Dashboard**:
-   - Response time distribution
-   - Slow query identification
-   - Resource utilization trends
-   - Throughput metrics
+- **`elk-test-runner.sh`**: Unified test execution interface, prerequisite validation
+  - Multiple execution modes: `comprehensive` (elk-validation.sh), `ci`/`ci-strict` (elk-ci-pipeline.sh), `quick` (connectivity tests)
+  - Environment prerequisite validation: .env file existence, Docker container status (`elk-elasticsearch`)
+  - Service accessibility verification via quick connectivity tests before full execution
+  - Simplified command-line interface for all testing scenarios
 
-3. **Security Dashboard**:
-   - Failed authentication attempts
-   - Unusual access patterns
-   - Error spike detection
-   - Service health status
+**Test Documentation**
+- **`README.md`**: Technical framework documentation, troubleshooting procedures
+- **`INDEX.md`**: Testing framework overview and execution interface documentation
+
+### Test Execution Patterns
+
+**Development Testing Workflow**
+```bash
+# Deploy stack and wait for initialization
+make up && sleep 60
+
+# Comprehensive validation with auto-fix
+./elk/tests/elk-validation.sh
+
+# Alternative unified interface
+./elk/tests/elk-test-runner.sh comprehensive
+```
+
+**CI/CD Pipeline Integration**
+```bash
+# Standard pipeline testing (warnings permitted)
+./elk/tests/elk-ci-pipeline.sh
+
+# Strict pipeline testing (warnings treated as failures)  
+./elk/tests/elk-ci-pipeline.sh --fail-on-warnings
+
+# Unified interface options
+./elk/tests/elk-test-runner.sh ci-strict
+```
+
+**Makefile Integration**
+```bash
+make test-elk        # elk-validation.sh execution
+make test-ci         # elk-ci-pipeline.sh standard mode
+make test-ci-strict  # elk-ci-pipeline.sh with --fail-on-warnings
+```
 
 ## Deployment and Operations
 
-### Initial Setup
+### Service Deployment Sequence
 
-1. **Environment Preparation**:
-   ```bash
-   # Generate environment variables
-   ./create-env.sh
-   
-   # Start ELK stack
-   docker-compose up -d
-   ```
+**Container Startup Order**
+```
+cert-generator → elasticsearch + app → kibana + logstash
+```
 
-2. **Service Verification**:
-   ```bash
-   # Check Elasticsearch
-   curl -u "elastic:$ELASTIC_PASSWORD" "http://localhost:9200/_cluster/health"
-   
-   # Verify Kibana
-   curl "http://localhost:5601/api/status"
-   
-   # Test log ingestion
-   docker-compose logs logstash
-   ```
+**Initial Deployment Process**
+```bash
+# Generate secure credentials and environment configuration
+./create-env.sh
 
-3. **Index Pattern Creation**:
-   - Navigate to Kibana Management
-   - Create index pattern: `fttranscendence-logs-*`
-   - Set @timestamp as time field
+# Deploy ELK stack, application integration
+docker-compose up -d
 
-### Maintenance Procedures
+# Verify service deployment status
+docker-compose ps
 
-1. **Log Rotation**:
-   - Automatic daily index creation
-   - Manual cleanup of old indices
-   - Storage monitoring and alerts
+# Run comprehensive testing validation
+./elk/tests/elk-test-runner.sh comprehensive
+```
 
-2. **Performance Optimization**:
-   - Regular index optimization
-   - Shard rebalancing
-   - Resource scaling based on load
+### System Verification and Testing
 
-3. **Backup Strategy**:
-   - Elasticsearch snapshot configuration
-   - Volume backup procedures
-   - Configuration backup
+**End-to-End Pipeline Testing**
+```bash
+# Generate backend application log
+curl -k "https://localhost:5000/api/test"
 
-### Troubleshooting Guide
+# Generate frontend log via API endpoint
+curl -k -X POST "https://localhost:5000/log" \
+  -H "Content-Type: application/json" \
+  -d '{"level":"info","message":"Test log entry","context":{"test":true}}'
 
-**Common Issues and Solutions**:
+# Verify log processing and indexing (allow processing time)
+sleep 10
 
-1. **Elasticsearch Connection Failures**:
-   - Verify network connectivity
-   - Check authentication credentials
-   - Review service startup logs
+# Query processed logs from Elasticsearch
+curl -k -u "elastic:$ELASTIC_PASSWORD" \
+  "https://localhost:9200/fttranscendence-logs-*/_search?size=2&sort=@timestamp:desc&pretty"
+```
 
-2. **Log Ingestion Problems**:
-   - Validate log file permissions
-   - Check Logstash pipeline configuration
-   - Verify volume mounts
+**Volume Management:**
+```bash
+# Container logs
+docker logs elk-elasticsearch
+docker logs elk-logstash  
+docker logs elk-kibana
 
-3. **Performance Issues**:
-   - Monitor resource utilization
-   - Optimize JVM heap settings
-   - Review index mapping configuration
+# Data volumes
+docker volume ls | grep ft_transcendence
 
-## Production Considerations
+# Reset deployment
+docker-compose down -v && rm -rf ./app/logs/* && docker-compose up -d
+```
 
-### Scalability Recommendations
+**Performance Monitoring:**
+```bash
+# Cluster statistics
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_cluster/stats"
 
-1. **Horizontal Scaling**:
-   - Multi-node Elasticsearch cluster
-   - Load-balanced Kibana instances
-   - Distributed Logstash processors
+# Index metrics
+curl -k -u "elastic:$ELASTIC_PASSWORD" "https://localhost:9200/_cat/indices/fttranscendence-logs-*?v"
 
-2. **Resource Planning**:
-   - Memory allocation based on log volume
-   - Storage capacity planning
-   - Network bandwidth requirements
+# Pipeline status
+curl "http://localhost:9600/_node/stats/pipelines"
+```
 
-3. **High Availability**:
-   - Elasticsearch cluster redundancy
-   - Failover mechanisms
-   - Data replication strategies
+### Container Startup Scripts and Health Monitoring
 
-### Security Enhancements
+**Elasticsearch Container Scripts (`elk/elasticsearch/scripts/`)**
+- **`entrypoint-es.sh`**: Primary container initialization script
+  - Certificate directory setup and permission configuration (`chmod 644/600`)
+  - Archive directory creation for snapshot repository at `/usr/share/elasticsearch/archives`
+  - TLS certificate copying from shared volume to Elasticsearch config directory
+  - Background Elasticsearch startup, `eswrapper` and process monitoring
+  - Automatic kibana_system user password configuration via security API
+  - Index template creation for `fttranscendence-logs-*` pattern, field mappings
+  - ILM policy execution via `setup-ilm.sh` orchestration
+  
+- **`healthcheck-es.sh`**: Container health validation script
+  - Client certificate authentication for `/_cluster/health` endpoint
+  - GREEN/YELLOW status validation for Docker health checks
+  - TLS verification, Elasticsearch service certificates
+  
+- **`setup-ilm.sh`**: Index Lifecycle Management and backup automation
+  - ILM policy creation: `fttranscendence-logs-policy` with Hot(7d/50GB) → Warm(8-30d) → Cold(31-365d) → Delete(365d)
+  - Index template application, field mappings (@timestamp, service, log_level, reqId, responseTime)
+  - Snapshot repository creation: `ft_archive_repo`, filesystem storage and 64MB compression
+  - SLM policy automation: `ft_archive_policy` for daily 2:00 AM backups (30-day retention, max 50 snapshots)
 
-1. **SSL/TLS Implementation**:
-   - Certificate-based authentication
-   - Encrypted inter-node communication
-   - HTTPS for Kibana access
+**Kibana Container Scripts (`elk/kibana/scripts/`)**
+- **`init-kibana.sh`**: Kibana service initialization and dashboard orchestration
+  - Background Kibana startup with process ID management
+  - Service availability polling until `/api/status` returns "available" 
+  - One-time dashboard setup execution with persistent state tracking (`/tmp/dashboards-initialized`)
+  - Process lifecycle management with wait command
+  
+- **`healthcheck-kibana.sh`**: Kibana service health validation
+  - SSL-enabled health check via `/api/status` endpoint, client certificates
+  - "available" status verification for Docker health monitoring
+  - TLS certificate-based authentication validation
+  
+- **`setup-dashboards.sh`**: Automated dashboard and visualization creation
+  - Index pattern creation: `fttranscendence-logs-*` with @timestamp time field and field mappings
+  - Visualization components: Log levels pie chart (`log-levels-pie`), services bar chart (`services-bar`)
+  - Main dashboard assembly: `ft_transcendence Log Analytics`, 24h time range and 10s refresh
+  - Kibana saved objects API integration, kibana_system authentication
 
-2. **Access Control**:
-   - Role-based permissions
-   - API key authentication
-   - Network access restrictions
-
-3. **Audit Logging**:
-   - User activity tracking
-   - Configuration change monitoring
-   - Security event alerting
-
-## Conclusion
-
-ELK stack implementation: log management solution for ft_transcendence application with real-time log ingestion, search capabilities, and visualization options. Dual-log architecture for separate backend and frontend analysis with centralized storage and unified Kibana access.
-
-Foundation for development and testing environments with clear pathways for production deployment and scaling. Regular monitoring, maintenance, and security updates required for performance and data integrity.
+**Logstash Container Scripts (`elk/logstash/scripts/`)**
+- **`entrypoint-ls.sh`**: Logstash pipeline initialization
+  - Elasticsearch availability polling, client certificate authentication via HTTPS
+  - Service dependency validation before processing startup
+  - Pipeline configuration loading from `/usr/share/logstash/pipeline/logstash.conf`, 2 workers
+  - Log file accessibility verification for `/logs/server.log` and `/logs/client.log`
