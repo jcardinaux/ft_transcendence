@@ -712,10 +712,6 @@ video {
   outline-offset: 2px;
 }
 
-.input-win98 {
-  /* Stili focus basilari */
-}
-
 .icon-button-win98 {
   display: flex;
   flex-direction: column;

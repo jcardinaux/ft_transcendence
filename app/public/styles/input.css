@@ -62,10 +62,10 @@ body {
   }
   .input-win98 {
     @apply bg-white border-2 border-solid win98-border-dark
-    p-1 text-black focus:outline-none focus:border-blue-500; /* Stili focus basilari */
+    p-1 text-black focus:outline-none focus:border-blue-500; 
   }
   .form-title-win98 {
-    @apply text-black font-bold text-lg mb-2 text-shadow-win98; /* Un po' più grande e con ombra */
+    @apply text-black font-bold text-lg mb-2 text-shadow-win98; 
   }
   .icon-button-win98 {
     @apply text-white text-xs flex flex-col items-center justify-center;

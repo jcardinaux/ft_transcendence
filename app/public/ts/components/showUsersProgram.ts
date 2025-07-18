@@ -8,7 +8,7 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 
 	//attivazione bottone
 	showUserButton?.addEventListener('click', async () =>{
-		const { id, username} = userInfo;
+		const {id} = userInfo;
 		if (showUserWindow) return;
 
 		try{
@@ -35,6 +35,7 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 				usersListDiv.innerHTML = '';
 				for (const user of allUsers) {
 					const card = new UserListCard({
+						id: user.id,
 						avatar: user.avatar,
 						username: user.username,
 						nickname: user.display_name || ''
