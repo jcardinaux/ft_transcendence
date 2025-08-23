@@ -12,7 +12,7 @@ export const webSocketController = (connection, req, reply) => {
 		connection.socket.on('close', () => {
 			reply.server.onlineUsers.delete(userId)
 			console.log(`❌ User ${userId} disconnected`)
-		}
+		});
 	}
 	catch (err){
 			console.error('❌ WebSocket auth error:', err.message)
