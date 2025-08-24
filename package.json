@@ -1,0 +1,30 @@
+{
+  "name": "trans",
+  "version": "1.0.0",
+  "description": "Pong web application with multiplayer capabilities, user management, and ELK stack logging infrastructure.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raviolotto/ft_transcendence.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/raviolotto/ft_transcendence/issues"
+  },
+  "homepage": "https://github.com/raviolotto/ft_transcendence#readme",
+  "dependencies": {
+    "fastify": "^5.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "nodemon": "^3.1.10"
+  }
+}

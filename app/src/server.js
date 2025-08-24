@@ -19,6 +19,7 @@ import  db from "../database/db.js"
 import profileRoute from './routes/profile.js'
 import matchesRoute from './routes/match.js'
 import frontendRoute from './routes/frontend.js'
+import WebSocketRoutes from './routes/webSocket.js'
 
 const httpOption = {
     key: readFileSync(resolve('certs', 'server.key')),
@@ -112,35 +113,35 @@ const start = async () => {
     try {
         await app.register(WebSocket)
         await app.register(fastifyEnv, {
-            dotenv: true, 
+			dotenv: true, 
             schema: schema,
             confKey: 'config', //accesso gobale tramite  app.config 
         });
         await app.register(multipart)
         
         await app.register(fastifyStatic, {
-            root: path.join(__dirname, '..', 'public'),
+			root: path.join(__dirname, '..', 'public'),
             prefix: '/',
         })
         
         await app.register(fastifySwagger, {
-            openapi: {
-                info: {
-                    title: 'ft_trascandance API documentation',
+			openapi: {
+				info: {
+					title: 'ft_trascandance API documentation',
                     description: 'amema & mcamilli qui della documentazione delle api del back',
                     version: '0.0.1',
                 },
                 servers: [
-                    { url: `https://localhost:${app.config.FASTIFY_PORT}`, description: 'Local dev: Development server' },
+					{ url: `https://localhost:${app.config.FASTIFY_PORT}`, description: 'Local dev: Development server' },
                 ],
                 tags: [
-                    {name: 'Auth', description: 'login and user menagment'},
+					{name: 'Auth', description: 'login and user menagment'},
                     {name: 'Profile', description: 'profile\'s update friends settings etc'}
                 ],
                 components: {
-                    securitySchemes: {
-                        bearerAuth: {
-                            type: 'http',
+					securitySchemes: {
+						bearerAuth: {
+							type: 'http',
                             scheme: 'bearer',
                             bearerFormat: 'JWT',
                             description: 'Autenticazione JWT tramite header Authorization (Bearer Token)'
@@ -151,18 +152,20 @@ const start = async () => {
         })
         
         await app.register(fastifySwaggerUi, {
-            routePrefix: '/docs',
+			routePrefix: '/docs',
             uiConfig: {
-                deepLinking: true 
+				deepLinking: true 
             },
         })
         
         // Registra le rotte API PRIMA del fallback per SPA
+		await app.register(WebSocketRoutes)  
         await app.register(authRoutes, {prefix: '/api/auth'})
         await app.register(profileRoute, {prefix: '/api/profile'})
         await app.register(matchesRoute, {prefix: '/api/matches'})
         await app.register(frontendRoute)
-        
+
+
         app.setNotFoundHandler((req, reply) => {
             const accept = req.headers.accept || '';
             if (accept.includes('text/html')) {

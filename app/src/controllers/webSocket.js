@@ -9,7 +9,7 @@ export const webSocketController = (connection, req, reply) => {
 		reply.server.onlineUsers.set(userId, connection.socket)
 		console.log(`✅ User ${userId} connected via WS`)
 
-		connection.socket.on('close', () => {
+		connection.socket.on('close', () => {  //on è un listener per questo dopoil primo accesso rimane in ascolto
 			reply.server.onlineUsers.delete(userId)
 			console.log(`❌ User ${userId} disconnected`)
 		});
