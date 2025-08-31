@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken'
+
 export const webSocketController = (connection, req, reply) => {
 	try{
 		const {token} = req.params
@@ -7,7 +9,7 @@ export const webSocketController = (connection, req, reply) => {
 		const userId = decoded.id
 		
 		reply.server.onlineUsers.set(userId, connection.socket)
-		console.log(`✅ User ${userId} connected via WS`)
+		console.log(`✅ User ${userId} connected via WS`)//attenzione deve essere wss non ws
 
 		connection.socket.on('close', () => {  //on è un listener per questo dopoil primo accesso rimane in ascolto
 			reply.server.onlineUsers.delete(userId)
