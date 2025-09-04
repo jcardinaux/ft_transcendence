@@ -13,7 +13,7 @@ var Paddle = /** @class */ (function () {
     function Paddle(x, y) {
         this.width = 20;
         this.height = 100;
-        this.speed = 6;
+        this.speed = 15;
         this.x = x;
         this.y = y;
     }
@@ -51,11 +51,13 @@ var Ball = /** @class */ (function () {
     return Ball;
 }());
 // Game state
-var leftPaddle = new Paddle(30, canvas.height / 2 - 50);
-var rightPaddle = new Paddle(canvas.width - 50, canvas.height / 2 - 50);
+// Molto vicini ai bordi (originale)
+var leftPaddle = new Paddle(20, canvas.height / 2 - 50);
+var rightPaddle = new Paddle(canvas.width - 40, canvas.height / 2 - 50);
 var ball = new Ball(canvas.width / 2, canvas.height / 2);
 var leftScore = 0;
 var rightScore = 0;
+var speedPongs = 0;
 // Input
 var upPressed = false;
 var downPressed = false;
@@ -116,6 +118,12 @@ function gameLoop() {
         ball.x - ball.radius > leftPaddle.x && // la palla non ha già superato il bordo
         ball.y > leftPaddle.y &&
         ball.y < leftPaddle.y + leftPaddle.height) {
+        if (ball.y - leftPaddle.y > 45 && ball.y - leftPaddle.y < 55) {
+            ball.dy = 0;
+            ball.dx = 10;
+        }
+        else
+            ball.dy *= 1.2;
         ball.dx *= -1;
         ball.x = leftPaddle.x + leftPaddle.width + ball.radius;
     }
@@ -168,7 +176,9 @@ function enemy() {
             var q = 0;
             var x_wall = 0;
             var y_wall = 0;
-            if (ball.dy > 0) {
+            if (ball.dy == 0)
+                y_wall = ball.y;
+            else if (ball.dy > 0) {
                 y_wall = 600;
                 q = ball.y - m * ball.x;
                 x_wall = (y_wall - q) / m;

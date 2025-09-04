@@ -16,7 +16,7 @@ class Paddle {
     public y: number;
     public width: number = 20;
     public height: number = 100;
-    public speed: number = 6;
+    public speed: number = 15;
 
     constructor(x: number, y: number) {
         this.x = x;
@@ -61,11 +61,13 @@ class Ball {
 }
 
 // Game state
-const leftPaddle = new Paddle(30, canvas.height / 2 - 50);
-const rightPaddle = new Paddle(canvas.width - 50, canvas.height / 2 - 50);
+// Molto vicini ai bordi (originale)
+const leftPaddle = new Paddle(20, canvas.height / 2 - 50);
+const rightPaddle = new Paddle(canvas.width - 40, canvas.height / 2 - 50);
 const ball = new Ball(canvas.width / 2, canvas.height / 2);
 let leftScore = 0;
 let rightScore = 0;
+let speedPongs = 0;
 
 // Input
 let upPressed = false;
@@ -124,7 +126,16 @@ function gameLoop() {
         ball.x - ball.radius > leftPaddle.x && // la palla non ha già superato il bordo
         ball.y > leftPaddle.y &&
         ball.y < leftPaddle.y + leftPaddle.height
-    ) {
+    ) 
+	{
+		if (ball.y  - leftPaddle.y > 45 && ball.y -  leftPaddle.y< 55)
+		{
+			ball.dy = 0;
+			ball.dx = 10;
+		}
+
+		else
+			ball.dy *=  1.2;
         ball.dx *= -1;
         ball.x = leftPaddle.x + leftPaddle.width + ball.radius;
     }
@@ -136,7 +147,9 @@ function gameLoop() {
         ball.x + ball.radius < rightPaddle.x + rightPaddle.width && // la palla non ha già superato il bordo
         ball.y > rightPaddle.y &&
         ball.y < rightPaddle.y + rightPaddle.height
-    ) {
+    ) 
+	{
+
         ball.dx *= -1;
         ball.x = rightPaddle.x - ball.radius;
     }
@@ -188,7 +201,9 @@ function enemy() {
 			let q = 0;
 			let x_wall = 0;
 			let y_wall = 0;
-			if (ball.dy > 0)
+			if (ball.dy == 0)
+				y_wall = ball.y;
+			else if (ball.dy > 0)
 			{
 				y_wall = 600
 				q = ball.y - m * ball.x
@@ -222,7 +237,6 @@ function enemy() {
 				}
 			}
             // x muro destro
-
 			// y di impatto con il muros
             let future_y = Math.max(rightPaddle.height / 2, Math.min(y_wall, canvas.height - rightPaddle.height / 2));
             printBallImpactY(future_y); // Stampa la coordinata y_wall a terminale
