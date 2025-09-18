@@ -1,4 +1,4 @@
-import { logError, logInfo } from "../utils/logger";
+import { logError, logInfo } from "../utils/logger.js";
 
 export interface userListCardOptions {
 	id: string,
@@ -9,9 +9,12 @@ export interface userListCardOptions {
 
 export class UserListCard {
 	element: HTMLElement;
-	constructor(options: userListCardOptions){
+	private options: userListCardOptions;
+
+	constructor(options: userListCardOptions) {
+		this.options = options;
 		const wrapper = document.createElement('div');
-		wrapper.className = 'UserListCard'
+		wrapper.className = 'UserListCard';
 
 		wrapper.innerHTML = `
 			<div class="flex justify-between">
@@ -22,26 +25,84 @@ export class UserListCard {
 						<span> nickname: ${options.nickname}</span>
 					</div>
 				</div>
-				<button id="add-friend" class="btn-win98 block"> add to friend </button>
+				<button class="btn-win98 add-friend-btn"> add to friend </button>
 			</div>
 			<hr class=" border-2 border-b-gray-200 border-t-gray-400 mb-4">
-		`
-		this.element = wrapper;
+		`;
 
-		/*wrapper.querySelector('#add-frind')?.addEventListener('click', async () =>{
-			try{
-				const token = localStorage.getItem('token')
-				const response = await fetch(`/api/profile/addFriend/${options.id}`, {
-					method: 'POST',
-					headers: {
+		this.element = wrapper;
+	}
+
+	async init() {
+		const button = this.element.querySelector('.add-friend-btn') as HTMLButtonElement;
+		const token = localStorage.getItem('token');
+		let flag = false
+
+		try {
+			const responseFriend = await fetch('/api/profile/getFriends', {
+				method: 'GET',
+				headers: {
 					'accept': 'application/json',
 					'Authorization': `Bearer ${token}`
+				}
+			});
+			const allFriends = await responseFriend.json();
+			if (allFriends.find((friend: any) => friend.id === this.options.id)) {
+				flag = true;
+				button.textContent = 'delate friend';
+			}
+			button.addEventListener('click', async () => {
+				if (!flag){
+
+					try {
+						const response = await fetch(`/api/profile/addFriend/${this.options.id}`, {
+							method: 'POST',
+							headers: {
+								'accept': 'application/json',
+								'Authorization': `Bearer ${token}`
+							},
+							body: ''
+						});
+						if (response.status === 200) {
+							logInfo(`Successfully added friend ${this.options.username}`);
+							flag = true;
+							button.textContent = 'delate friend';
+						} else {
+							const errorMsg = await response.text();
+							logError(`Error adding friend: ${errorMsg}`);
+						}
+					} catch (err) {
+						logError(`impossible add ${this.options.username} as friend`);
 					}
-				})
-			}
-			catch(err){
-				logError(`impossible add $[]`)
-			}
-		})*/
+				}
+				else {
+					try{
+						const response = await fetch(`/api/profile/deleteFriend/${this.options.id}`, {
+							method: 'DELETE',
+							headers: {
+								'accept': 'application/json',
+								'Authorization': `Bearer ${token}`
+							},
+							body: ''
+						})
+						if (response.status === 200){
+							logInfo(`Successfully removed friend ${this.options.username}`)
+							flag = false;
+							button.textContent = ' add to friend'
+						}
+						else {
+							const errorMsg = await response.text();
+							logError(`Error adding friend: ${errorMsg}`);
+						}
+					}
+					catch (err) {
+						logError(`impossible remove ${this.options.username} from friend`);
+					}
+				}
+			});
+
+		} catch (err) {
+			logError('Error checking friend status');
+		}
 	}
 }
