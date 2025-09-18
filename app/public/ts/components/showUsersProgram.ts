@@ -8,7 +8,7 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 
 	//attivazione bottone
 	showUserButton?.addEventListener('click', async () =>{
-		const { id, username} = userInfo;
+		const {id} = userInfo;
 		if (showUserWindow) return;
 
 		try{
@@ -34,12 +34,16 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 			if (usersListDiv && Array.isArray(allUsers)) {
 				usersListDiv.innerHTML = '';
 				for (const user of allUsers) {
-					const card = new UserListCard({
-						avatar: user.avatar,
-						username: user.username,
-						nickname: user.display_name || ''
-					});
-					usersListDiv.appendChild(card.element);
+					if(user.id != id){
+						const card = new UserListCard({
+							id: user.id,
+							avatar: user.avatar,
+							username: user.username,
+							nickname: user.display_name || ''
+						});
+						await card.init();
+						usersListDiv.appendChild(card.element);
+					}
 				}
 			}
 		}

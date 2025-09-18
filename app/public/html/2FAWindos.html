@@ -1,0 +1,18 @@
+<div id="twofaWindow" class="flex space-x-4 p-4 justify-between">
+	<div id="qr-code">
+
+	</div>
+	<div class="flex flex-col gap-2">
+		<button id="activate" class="btn-win98">activate 2FA</button>
+		<button id="next" class=" btn-win98 hidden"> next -> </button>
+	</div>
+</div>
+<div id="next-page" class="hidden">
+	<form id="twofa-form" class="flex flex-col gap-4">
+		<input type="text" id="code" placeholder="insert here your otp code" class="input-win98" required />
+		<button type="submit" class="btn-win98">verify!!</button>
+	</form>
+</div>
+<div id="finish" class="hidden">
+	your 2FA has been activated
+</div>
