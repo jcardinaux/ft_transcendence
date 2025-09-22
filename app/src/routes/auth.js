@@ -1,4 +1,4 @@
-import { getUserOpts, getUserByIdOpts, postUserOpts, deleteUserOpts, loginOpts} from '../schemas/auth.js'
+import { getUserOpts, getUserByIdOpts, postUserOpts, deleteUserOpts, loginOpts, getUserByUsernameOpts} from '../schemas/auth.js'
 
 
 async function authRoutes(fastify, options){
@@ -6,6 +6,8 @@ async function authRoutes(fastify, options){
     fastify.get("/users", getUserOpts)
 //retrive user by id
     fastify.get("/user/:id", getUserByIdOpts)
+//retrive user by username
+    fastify.get("/getuser/:username", getUserByUsernameOpts)
 //add a user
     fastify.post("/user", postUserOpts)
 //delete a user

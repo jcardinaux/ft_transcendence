@@ -1,4 +1,4 @@
-import { getAllUsers, getSingleUser, addUser, deleteUser, login} from '../controllers/auth.js'
+import { getAllUsers, getSingleUser, addUser, deleteUser, login, getUserByUsername} from '../controllers/auth.js'
 import { MessageSchema, UserSchema } from './utils.js'
 
 export const getUserOpts = {
@@ -25,6 +25,17 @@ export const getUserByIdOpts = {
         },
     },
     handler: getSingleUser
+}
+
+export const getUserByUsernameOpts = {
+    schema: {
+		tags: ['Auth'],
+        response: {
+            200: UserSchema,
+            404: MessageSchema
+        },
+    },
+    handler: getUserByUsername
 }
 
 export const postUserOpts = {

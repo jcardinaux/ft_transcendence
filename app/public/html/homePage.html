@@ -2,6 +2,16 @@
   style="background-image: url('/assets/windows_wallpaper.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;">
     <div class="text-center">
         <h1 class="text-6xl font-extrabold mb-4 text-shadow-glow">ft_transcendence</h1>
-        <a href="/welcome" data-link class="btn-win98">Avvia</a>
+        <div id="start-container">
+            <button id="start-btn" class="btn-win98">Start</button>
+            <div id="loading-container" class="hidden">
+                <div class="loading-bar-container">
+                    <div class="loading-bar-background">
+                        <div id="loading-bar" class="loading-bar-fill"></div>
+                    </div>
+                    <div class="loading-text mt-2">Loading...</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

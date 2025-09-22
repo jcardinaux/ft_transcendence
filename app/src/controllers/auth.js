@@ -18,6 +18,14 @@ export const getSingleUser = (req, reply) => {
 	reply.send(user)
 }
 
+export const getUserByUsername = (req, reply) => {
+	const {username} = req.params
+	const stmt = reply.server.db.prepare('SELECT username, id, display_name FROM users WHERE username = ?')
+	const user = stmt.get(username)
+	if (!user) return reply.code(404).send({message: "Sorry we don't have this user"})
+	reply.send(user)
+}
+
 export const addUser = async (req, reply) => {
 	let {username, password, email, display_name} = req.body
 	const cryptedPsw = await bcrypt.hash(password, 10)
