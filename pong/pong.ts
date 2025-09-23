@@ -286,8 +286,9 @@ function gameLoop() {
         if (ball.x - ball.radius < 0) {
             printBallGoalY();
             rightScore++;
-            if (checkWinCondition()) {
-                // Non fare return qui, lascia che il loop continui per mostrare game over
+            if (checkWinCondition()) 
+			{
+                
             } else {
                 resetBall();
             }
