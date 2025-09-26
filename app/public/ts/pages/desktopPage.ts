@@ -3,6 +3,7 @@ import {userApplication} from "../components/userProgram.js";
 import {showUserApllication} from "../components/showUsersProgram.js"
 import { Application2FA } from "../components/2faProgram.js";
 import { statsProgram } from "../components/statsProgram.js";
+import { pong } from "../components/pong.js";
 
 export async function renderDesktopPage() {
 	const app = document.getElementById('app')
@@ -36,6 +37,7 @@ export async function renderDesktopPage() {
 		showUserApllication(userInfo, app);
 		Application2FA(userInfo, app);
 		statsProgram(userInfo, app);
+		pong(userInfo, app);
 	}
 	catch(err){
 		logError('error loading desktopPage.html', err as any);

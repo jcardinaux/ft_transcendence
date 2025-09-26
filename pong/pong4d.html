@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Babylon 3D Pong (UMD)</title>
+<style>
+  html,body { height:100%; margin:0; background:#0b0f13; }
+  #renderCanvas { width:100%; height:100%; display:block; touch-action:none; }
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+
+<!-- UMD bundles (no type="module") -->
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+
+<script>
+  const canvas = document.getElementById("renderCanvas");
+  const engine = new BABYLON.Engine(canvas, true, { stencil:true, preserveDrawingBuffer:true });
+
+  const createScene = () => {
+    const scene = new BABYLON.Scene(engine);
+    scene.clearColor = new BABYLON.Color4(0.04,0.06,0.08,1);
+
+    // Camera
+    const camera = new BABYLON.ArcRotateCamera("cam",
+      -Math.PI/2.2, Math.PI/3.2, 28, BABYLON.Vector3.Zero(), scene);
+    camera.lowerBetaLimit = 0.7; camera.upperBetaLimit = 1.3;
+    camera.lowerRadiusLimit = 18; camera.upperRadiusLimit = 40;
+    camera.attachControl(canvas, true);
+
+    // Lights
+    const hemi = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
+    hemi.intensity = 0.8;
+    const dir = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-0.6,-1,-0.3), scene);
+    dir.position = new BABYLON.Vector3(15,20,10);
+    dir.intensity = 0.6;
+
+    // Materials
+    const mTable = new BABYLON.PBRMaterial("mTable", scene); mTable.roughness=0.8; mTable.metallic=0.0; mTable.albedoColor=new BABYLON.Color3(0.07,0.10,0.14);
+    const mLine  = new BABYLON.PBRMaterial("mLine", scene);  mLine.roughness=0.3; mLine.albedoColor=new BABYLON.Color3(0.9,0.9,0.95);
+    const mPadL  = new BABYLON.PBRMaterial("mPadL", scene);  mPadL.roughness=0.45; mPadL.albedoColor=new BABYLON.Color3(0.95,0.95,0.95);
+    const mPadR  = mPadL.clone("mPadR");
+    const mBall  = new BABYLON.PBRMaterial("mBall", scene);  mBall.albedoColor=new BABYLON.Color3(0.85,0.88,0.95); mBall.emissiveColor=new BABYLON.Color3(0.05,0.06,0.08);
+
+    // Field
+    const FIELD_W=24, FIELD_H=14, TABLE_Z=-2, WALL=0.3;
+    const table = BABYLON.MeshBuilder.CreateBox("table", { width:FIELD_W+2, height:FIELD_H+2, depth:0.5 }, scene);
+    table.position.z = TABLE_Z; table.material = mTable; table.receiveShadows = true;
+
+    // Net & lines
+    const dashCount=12, dashH=(FIELD_H-(dashCount-1)*0.6)/dashCount;
+    for(let i=0;i<dashCount;i++){
+      const d = BABYLON.MeshBuilder.CreateBox("dash"+i,{width:0.25,height:dashH,depth:0.2},scene);
+      d.material=mLine; d.position.set(0, -FIELD_H/2 + i*(dashH+0.6)+dashH/2, TABLE_Z-0.15);
+    }
+    const top = BABYLON.MeshBuilder.CreateBox("top",{width:FIELD_W,height:0.2,depth:0.15},scene);
+    top.material=mLine; top.position.set(0, FIELD_H/2, TABLE_Z-0.18);
+    const bot = top.clone("bot"); bot.position.y = -FIELD_H/2;
+
+    // Paddles
+    const P_W=0.8, P_H=3.2, P_D=0.8;
+    const pL = BABYLON.MeshBuilder.CreateBox("pL",{width:P_W,height:P_H,depth:P_D},scene);
+    pL.material=mPadL; pL.position.set(-FIELD_W/2+1.8,0,TABLE_Z-0.25);
+    const pR = pL.clone("pR"); pR.material=mPadR; pR.position.x = FIELD_W/2-1.8;
+
+    // Ball
+    const BALL_R=0.45;
+    const ball = BABYLON.MeshBuilder.CreateSphere("ball",{diameter:BALL_R*2,segments:24},scene);
+
+    // Shadows
+    const sh = new BABYLON.ShadowGenerator(2048, dir);
+    sh.useExponentialShadowMap = true;
+    [pL,pR,ball].forEach(m=>sh.addShadowCaster(m));
+    table.receiveShadows = true;
+
+    // GUI
+    const ui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const scoreTxt = new BABYLON.GUI.TextBlock(); scoreTxt.color="white"; scoreTxt.fontSize=36; scoreTxt.top="-46%"; scoreTxt.text="0 : 0"; ui.addControl(scoreTxt);
+    const hint = new BABYLON.GUI.TextBlock(); hint.color="#9fb0c8"; hint.fontSize=18; hint.text="W/S = Left • ↑/↓ = Right • Space = Pause • R = Reset"; hint.top="-40%"; ui.addControl(hint);
+    const banner = new BABYLON.GUI.TextBlock(); banner.color="white"; banner.fontSize=32; banner.text=""; banner.top="40%"; ui.addControl(banner);
+
+    // Game state
+    let scoreL=0, scoreR=0, paused=false;
+    const WIN=11, PAD_SPEED=10.5, V0=9.0, VMAX=22.0, ACC=1.02;
+    let vx=0, vy=0;
+
+    const keys = new Set();
+    window.addEventListener("keydown", e => { keys.add(e.code); if(e.code==="Space") togglePause(); if(e.code==="KeyR") reset(true); });
+    window.addEventListener("keyup", e => keys.delete(e.code));
+
+    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+    const updateScore = () => scoreTxt.text = `${scoreL} : ${scoreR}`;
+    function serve(toRight=Math.random()<0.5){
+      ball.position.set(0,0,TABLE_Z-0.2);
+      const a = Math.random()*0.6 - 0.3;
+      const s = V0;
+      vx = (toRight?1:-1)*Math.cos(a)*s;
+      vy = Math.sin(a)*s;
+    }
+    function aabbHit(p){
+      const minX=p.position.x-P_W/2, maxX=p.position.x+P_W/2;
+      const minY=p.position.y-P_H/2, maxY=p.position.y+P_H/2;
+      const cx = clamp(ball.position.x, minX, maxX);
+      const cy = clamp(ball.position.y, minY, maxY);
+      const dx = ball.position.x - cx, dy = ball.position.y - cy;
+      return dx*dx+dy*dy <= BALL_R*BALL_R;
+    }
+    function bounce(p, isLeft){
+      const rel = (ball.position.y - p.position.y)/(P_H/2);
+      const ang = clamp(rel,-1,1) * Math.PI/4;
+      const dir = isLeft ? 1 : -1;
+      const speed = clamp(Math.hypot(vx,vy)*ACC, V0, VMAX);
+      vx = dir*Math.cos(ang)*speed; vy = Math.sin(ang)*speed;
+      ball.position.x = isLeft ? (p.position.x + P_W/2 + BALL_R + 0.02)
+                               : (p.position.x - P_W/2 - BALL_R - 0.02);
+    }
+    function togglePause(){ paused=!paused; banner.text = paused ? "Paused" : ""; }
+    function checkWin(){
+      if (scoreL>=WIN || scoreR>=WIN){ paused=true; banner.text=(scoreL>scoreR?"Left":"Right")+" Player Wins! (R to restart)"; return true; }
+      return false;
+    }
+    function reset(full=false){
+      pL.position.y=0; pR.position.y=0;
+      if(full){ scoreL=0; scoreR=0; updateScore(); banner.text=""; }
+      serve(Math.random()<0.5); paused=false;
+    }
+
+    // Loop
+    let last = performance.now();
+    scene.onBeforeRenderObservable.add(()=>{
+      const now = performance.now(), dt = Math.min(0.033,(now-last)/1000); last=now;
+      if (paused) return;
+
+      // Input
+      let vyL=0, vyR=0;
+      if (keys.has("KeyW")) vyL -= PAD_SPEED;
+      if (keys.has("KeyS")) vyL += PAD_SPEED;
+      if (keys.has("ArrowUp")) vyR -= PAD_SPEED;
+      if (keys.has("ArrowDown")) vyR += PAD_SPEED;
+
+      pL.position.y = clamp(pL.position.y + vyL*dt, -FIELD_H/2 + P_H/2, FIELD_H/2 - P_H/2);
+      pR.position.y = clamp(pR.position.y + vyR*dt, -FIELD_H/2 + P_H/2, FIELD_H/2 - P_H/2);
+
+      // Ball
+      ball.position.x += vx*dt; ball.position.y += vy*dt;
+
+      // Walls
+      if (ball.position.y >= FIELD_H/2 - BALL_R){ ball.position.y = FIELD_H/2 - BALL_R; vy = -Math.abs(vy); }
+      if (ball.position.y <= -FIELD_H/2 + BALL_R){ ball.position.y = -FIELD_H/2 + BALL_R; vy = Math.abs(vy); }
+
+      // Paddles
+      if (vx < 0 && aabbHit(pL)) bounce(pL,true);
+      if (vx > 0 && aabbHit(pR)) bounce(pR,false);
+
+      // Scoring
+      if (ball.position.x < -FIELD_W/2 - BALL_R){ scoreR++; updateScore(); if(!checkWin()) serve(true); }
+      if (ball.position.x >  FIELD_W/2 + BALL_R){ scoreL++; updateScore(); if(!checkWin()) serve(false); }
+
+      // Visual depth wobble
+      ball.position.z = TABLE_Z - 0.2 - Math.min(0.6, Math.abs(vy)/VMAX);
+    });
+
+    // Start
+    reset(true);
+    window.addEventListener("resize", ()=>engine.resize());
+    return scene;
+  };
+
+  const scene = createScene();
+  engine.runRenderLoop(()=>scene.render());
+</script>
+</body>
+</html>
