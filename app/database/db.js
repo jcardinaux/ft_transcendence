@@ -24,9 +24,9 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS matches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   player1_id INTEGER NOT NULL,
-  player2_id INTEGER NOT NULL,
-  winner_id INTEGER NOT NULL,
-  score TEXT NOT NULL,
+  player2_id INTEGER,
+  winner_id INTEGER,
+  score TEXT,
   date TEXT DEFAULT (datetime('now'))
   );
 `)

@@ -748,6 +748,9 @@ function handleTournamentMatchEnd(windowElement: HTMLElement, gameMode: GameMode
 		updateTournamentResults(winnerPlayer.id, true);
 		updateTournamentResults(loserPlayer.id, false);
 		
+		// Salva il match nel database
+		saveMatchToDatabase(gameMode, winner === 'player1' ? 0 : 1, winner === 'player2' ? 0 : 1, winner);
+		
 		// Avanza al prossimo match
 		gameMode.tournamentData.currentMatchIndex++;
 		
@@ -851,6 +854,55 @@ function resetTournamentSetup(windowElement: HTMLElement) {
 	}
 }
 
+// Funzione per salvare i risultati delle partite nel database
+async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightScore: number, winner: 'player1' | 'player2') {
+	// Ignora le partite contro la CPU
+	if (gameMode.type === '1vsCPU') {
+		console.log('CPU practice match - not saving to database');
+		return;
+	}
+
+	// Verifica che abbiamo entrambi i giocatori
+	if (!gameMode.player1 || !gameMode.player2) {
+		logError('Cannot save match: missing player data');
+		return;
+	}
+
+	try {
+		// Determina il vincitore e prepara i dati
+		const winnerId = winner === 'player1' ? gameMode.player1.id : gameMode.player2.id;
+		const score = `${leftScore}-${rightScore}`;
+
+		const matchData = {
+			player1_id: gameMode.player1.id,
+			player2_id: gameMode.player2.id,
+			winner_id: winnerId,
+			score: score
+		};
+
+		console.log('Saving match to database:', matchData);
+
+		// Effettua la chiamata API
+		const response = await fetch('/api/matches/addMatch', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(matchData)
+		});
+
+		if (response.ok) {
+			const result = await response.json();
+			console.log('Match saved successfully:', result);
+		} else {
+			const errorText = await response.text();
+			logError(`Failed to save match: ${response.status} - ${errorText}`);
+		}
+	} catch (error) {
+		logError('Error saving match to database:', error as any);
+	}
+}
+
 // vecchio codice inizia da qui
 function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	const canvas = windowElement.querySelector('#gameCanvas') as HTMLCanvasElement;
@@ -948,8 +1000,12 @@ function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 				winner = gameMode.player1.display_name || gameMode.player1.username;
 			} else if (gameMode && gameMode.type === '1v1') {
 				winner = gameMode.player1.display_name || gameMode.player1.username;
+				// Salva la partita nel database
+				saveMatchToDatabase(gameMode, leftScore, rightScore, 'player1');
 			} else if (gameMode && gameMode.type === 'tournament') {
 				winner = gameMode.player1.display_name || gameMode.player1.username;
+				// Salva la partita nel database
+				saveMatchToDatabase(gameMode, leftScore, rightScore, 'player1');
 				// Gestisce l'avanzamento del torneo
 				setTimeout(() => {
 					handleTournamentMatchEnd(windowElement, gameMode, 'player1');
@@ -966,8 +1022,12 @@ function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 				winner = "CPU";
 			} else if (gameMode && gameMode.type === '1v1') {
 				winner = gameMode.player2?.display_name || gameMode.player2?.username || "Player 2";
+				// Salva la partita nel database
+				saveMatchToDatabase(gameMode, leftScore, rightScore, 'player2');
 			} else if (gameMode && gameMode.type === 'tournament') {
 				winner = gameMode.player2?.display_name || gameMode.player2?.username || "Player 2";
+				// Salva la partita nel database
+				saveMatchToDatabase(gameMode, leftScore, rightScore, 'player2');
 				// Gestisce l'avanzamento del torneo
 				setTimeout(() => {
 					handleTournamentMatchEnd(windowElement, gameMode, 'player2');

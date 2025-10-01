@@ -9,7 +9,8 @@ import {showAllUseriInfo,
 		deleteFriend,
 		getFriends,
 		userStats,
-		allUserMathces} from "../controllers/profile.js"
+		allUserMathces,
+		updatePlayerStats} from "../controllers/profile.js"
 import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema } from "./utils.js"
 
 export const UsernameOpts = {
@@ -184,11 +185,14 @@ export const userStatsOpts = {
 		security: [{ bearerAuth: []}],
 		response: {
 			200: {
-				tipe: 'object',
+				type: 'object',
 				properties: {
 					wins: {type: 'integer'},
 					losses: {type: 'integer'},
-					matchNumber: {type: 'integer'}
+					totalMatches: {type: 'integer'},
+					pvpMatches: {type: 'integer'},
+					cpuMatches: {type: 'integer'},
+					winRate: {type: 'number'}
 				}
 			}
 		}
@@ -211,3 +215,51 @@ export const allUserMathcesOpts = {
 	preHandler: (req, replay) => req.server.verifyJWT(req, replay),
 	handler: allUserMathces
 }
+
+export const updatePlayerStatsOpts = {
+	schema: {
+		tags: ['Profile'],
+		body: {
+			type: 'object',
+			required: ['player1_id'],
+			properties: {
+				player1_id: { type: 'integer' },
+				player2_id: { type: ['integer', 'null'] },
+				winner_id: { type: ['integer', 'null'] },
+				score: { type: ['string', 'null'] }
+			}
+		},
+		response: {
+			200: { 
+				type: 'object', 
+				properties: { 
+					message: { type: 'string' },
+					match_id: { type: 'integer' },
+					player1_id: { type: 'integer' },
+					player2_id: { type: 'integer' },
+					winner_id: { type: 'integer' },
+					score: { type: 'string' }
+				}
+			},
+			400: { 
+				type: 'object', 
+				properties: { 
+					message: { type: 'string' }
+				}
+			},
+			404: { 
+				type: 'object', 
+				properties: { 
+					message: { type: 'string' }
+				}
+			},
+			500: { 
+				type: 'object', 
+				properties: { 
+					message: { type: 'string' }
+				}
+			}
+		}
+	},
+	handler: updatePlayerStats
+};

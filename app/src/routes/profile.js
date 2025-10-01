@@ -10,7 +10,8 @@ import { UsernameOpts,
 	deleteFriendOpts,
 	getFriendsOpts,
 	userStatsOpts,
-	allUserMathcesOpts} from "../schemas/profile.js"
+	allUserMathcesOpts,
+	updatePlayerStatsOpts} from "../schemas/profile.js"
 
 async function profileRoute(fastify, options){
  
@@ -26,6 +27,7 @@ async function profileRoute(fastify, options){
 	fastify.get("/getFriends", getFriendsOpts)
 	fastify.get("/stats", userStatsOpts)
 	fastify.get ("/matches", allUserMathcesOpts)
+	fastify.post("/update-player-stats", updatePlayerStatsOpts)
 }
 
 export default profileRoute

@@ -173,14 +173,79 @@ export const getFriends = async (req, reply) => {
 
 export const userStats = async (req, reply) => {
 	const {id} = req.user
-	const winStmt = reply.server.db.prepare('SELECT COUNT(*) AS wins FROM matches WHERE winner_id = ?')
-	const looseStmt = reply.server.db.prepare('SELECT COUNT(*) AS losses FROM matches WHERE (player1_id = ? OR player2_id = ?) AND winner_id != ?')
-	const matchStmt = reply.server.db.prepare('SELECT COUNT(*) AS matchNumber FROM matches WHERE player1_id = ? OR player2_id = ?')
-	const {wins} = winStmt.get(id)
-	const {losses} = looseStmt.get(id, id, id)
-	const {matchNumber} = matchStmt.get(id, id)
+	
+	console.log(`🔍 Debug: user ID = ${id}, tipo: ${typeof id}`);
+	
+	// Query semplici e chiare per calcolare le statistiche
+	
+	// 1. Vittorie: partite dove l'utente è coinvolto E ha vinto
+	const winsStmt = reply.server.db.prepare(`
+		SELECT COUNT(*) AS wins 
+		FROM matches 
+		WHERE (player1_id = ? OR (player2_id = ? AND player2_id IS NOT NULL)) AND winner_id = ?
+	`);
+	
+	// 2. Sconfitte: partite dove l'utente è coinvolto ma NON ha vinto
+	const lossesStmt = reply.server.db.prepare(`
+		SELECT COUNT(*) AS losses 
+		FROM matches 
+		WHERE (player1_id = ? OR (player2_id = ? AND player2_id IS NOT NULL))
+		AND winner_id IS NOT NULL 
+		AND winner_id != ?
+	`);
+	
+	// 3. Totale partite: tutte le partite dove l'utente è coinvolto
+	const totalMatchesStmt = reply.server.db.prepare(`
+		SELECT COUNT(*) AS totalMatches 
+		FROM matches 
+		WHERE player1_id = ? OR (player2_id = ? AND player2_id IS NOT NULL)
+	`);
+	
+	// 4. Partite PvP: partite con due giocatori reali
+	const pvpMatchesStmt = reply.server.db.prepare(`
+		SELECT COUNT(*) AS pvpMatches 
+		FROM matches 
+		WHERE (player1_id = ? OR (player2_id = ? AND player2_id IS NOT NULL)) AND player2_id IS NOT NULL
+	`);
+	
+	// 5. Partite vs CPU: partite con CPU (player2_id NULL)
+	const cpuMatchesStmt = reply.server.db.prepare(`
+		SELECT COUNT(*) AS cpuMatches 
+		FROM matches 
+		WHERE player1_id = ? AND player2_id IS NULL
+	`);
+	
+	// Esegui le query
+	const {wins} = winsStmt.get(id, id, id);
+	const {losses} = lossesStmt.get(id, id, id);
+	const {totalMatches} = totalMatchesStmt.get(id, id);
+	const {pvpMatches} = pvpMatchesStmt.get(id, id);
+	const {cpuMatches} = cpuMatchesStmt.get(id);
 
-	reply.send({wins, losses, matchNumber})
+	// Calcola statistiche aggiuntive
+	const winRate = totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(1) : 0;
+
+	console.log(`📊 Stats complete per utente ${id}:`, { 
+		wins, 
+		losses, 
+		totalMatches, 
+		pvpMatches, 
+		cpuMatches,
+		winRate: `${winRate}%`
+	});
+	
+	// Debug: vediamo tutti i match di questo utente
+	const allMatches = reply.server.db.prepare('SELECT * FROM matches WHERE player1_id = ? OR player2_id = ?').all(id, id);
+	console.log(`🔍 Tutti i match per utente ${id}:`, allMatches);
+
+	reply.send({
+		wins,           // Partite vinte
+		losses,         // Partite perse  
+		totalMatches,   // Totale partite giocate
+		pvpMatches,     // Partite contro altri giocatori
+		cpuMatches,     // Partite contro CPU
+		winRate: parseFloat(winRate)  // Percentuale di vittorie
+	})
 }
 
 export const allUserMathces = async (req, reply) => {
@@ -189,3 +254,92 @@ export const allUserMathces = async (req, reply) => {
 	const matches = stmt.all(id, id)
 	reply.send(matches)
 }
+
+export const updatePlayerStats = async (req, reply) => {
+	const { player1_id, player2_id, winner_id, score } = req.body;
+	
+	console.log('🔧 updatePlayerStats chiamata con:', { player1_id, player2_id, winner_id, score });
+	console.log('🔧 Tipi:', { 
+		player1_id: typeof player1_id, 
+		player2_id: typeof player2_id, 
+		winner_id: typeof winner_id, 
+		score: typeof score 
+	});
+	
+	try {
+		// Solo player1_id è obbligatorio
+		if (!player1_id) {
+			console.log('❌ player1_id mancante');
+			return reply.code(400).send({ 
+				message: 'Parametro obbligatorio mancante: player1_id' 
+			});
+		}
+		
+		console.log('✅ player1_id presente:', player1_id);
+		
+		const db = reply.server.db;
+		
+		// Se winner_id è specificato, deve essere uno dei giocatori coinvolti
+		if (winner_id !== null && winner_id !== undefined) {
+			console.log('🔧 Validazione winner_id...');
+			if (player2_id && winner_id !== player1_id && winner_id !== player2_id) {
+				console.log('❌ winner_id non valido per PvP');
+				return reply.code(400).send({ 
+					message: 'winner_id deve essere uguale a player1_id o player2_id' 
+				});
+			} else if (!player2_id && winner_id !== player1_id) {
+				console.log('❌ winner_id non valido per CPU');
+				return reply.code(400).send({ 
+					message: 'Per partite singole, winner_id deve essere uguale a player1_id' 
+				});
+			}
+		}
+		
+		console.log('✅ Validazione winner_id OK');
+		
+		// Verifica che player1 esista sempre
+		console.log('🔧 Verifica esistenza player1...');
+		const player1 = db.prepare('SELECT id FROM users WHERE id = ?').get(player1_id);
+		if (!player1) {
+			console.log('❌ player1 non trovato');
+			return reply.code(404).send({ message: `Giocatore con ID ${player1_id} non trovato` });
+		}
+		
+		console.log('✅ player1 trovato');
+		
+		// Verifica player2 solo se specificato
+		if (player2_id) {
+			console.log('🔧 Verifica esistenza player2...');
+			const player2 = db.prepare('SELECT id FROM users WHERE id = ?').get(player2_id);
+			if (!player2) {
+				console.log('❌ player2 non trovato');
+				return reply.code(404).send({ message: `Giocatore con ID ${player2_id} non trovato` });
+			}
+			console.log('✅ player2 trovato');
+		}
+		
+		// Inserisci il match nel database
+		console.log('🔧 Inserimento nel database...');
+		const result = db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score) VALUES (?, ?, ?, ?)')
+			.run(player1_id, player2_id || null, winner_id || null, score || null);
+		
+		console.log('✅ Match inserito con ID:', result.lastInsertRowid);
+		
+		const matchType = player2_id ? 'tra giocatori' : 'contro CPU';
+		
+		reply.send({ 
+			message: `Match ${matchType} registrato con successo`,
+			match_id: result.lastInsertRowid,
+			player1_id: player1_id,
+			player2_id: player2_id || null,
+			winner_id: winner_id || null,
+			score: score || null,
+			match_type: player2_id ? 'pvp' : 'vs_cpu'
+		});
+		
+	} catch (err) {
+		console.error('❌ Errore in updatePlayerStats:', err);
+		console.error('❌ Stack trace:', err.stack);
+		reply.code(500).send({ message: 'Errore interno del server: ' + err.message });
+	}
+};
