@@ -66,7 +66,7 @@ export async function renderWelcomePage() {
             logError('Login failed', error);
           }
         } catch (err) {
-          logError('login error', err);
+          logError('login error', err as any);
           if (errorDiv) {
             errorDiv.textContent = 'server connection error';
             errorDiv.classList.remove('hidden');
@@ -133,7 +133,7 @@ export async function renderWelcomePage() {
     logInfo('Login page loaded');
 
   } catch (err) {
-    logError('Errore nel caricamento della login.html', err);
+    logError('Errore nel caricamento della login.html', err as any);
     app.innerHTML = '<p>Errore nel caricamento della pagina.</p>';
   }
 }
