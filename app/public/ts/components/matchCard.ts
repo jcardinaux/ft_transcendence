@@ -1,4 +1,5 @@
 import { urlToHttpOptions } from "url";
+import { getSystemErrorName } from "util";
 
 export interface matchOpts{
 	id: number,
@@ -10,27 +11,46 @@ export interface matchOpts{
     gameName: string
 }
 
+
+export interface userObject{
+    id: string,
+    username: string,
+    email: string,
+    display_name: string
+} 
+
 export class MatchCard {
 	private options: matchOpts;
-    private element: HTMLElement;
+    element: HTMLElement;
 
     private constructor(opt: matchOpts, element: HTMLElement){
         this.options = opt;
         this.element = element;
     }
 
-populate(){
+async getName(id: string){
+    const response = await fetch(`/api/auth/user/${id}`);
+    if(response.status === 200){
+        const user : userObject =await response.json();
+        return user.display_name;
+    }
+
+    return `${id}`;
+}
+
+async populate(){
     // Game name e ID
+    this.element.querySelector('.game-name-short')!.textContent = this.options.gameName;
     this.element.querySelector('.game-name')!.textContent = this.options.gameName;
     this.element.querySelector('.match-id')!.textContent = `#${this.options.id}`;
     
     // Players
-    this.element.querySelector('.player1-id')!.textContent = this.options.player1_id.toString();
-    this.element.querySelector('.player2-id')!.textContent = this.options.player2_id.toString();
+    this.element.querySelector('.player1-id')!.textContent = await this.getName(this.options.player1_id.toString());
+    this.element.querySelector('.player2-id')!.textContent = await this.getName(this.options.player2_id.toString());
     
     // Results
     this.element.querySelector('.score')!.textContent = this.options.score;
-    this.element.querySelector('.winner-id')!.textContent = `Player ${this.options.winner_id}`;
+    this.element.querySelector('.winner-id')!.textContent = await this.getName(this.options.winner_id.toString());
     
     // Date
     const date = new Date(this.options.date);
@@ -44,7 +64,8 @@ populate(){
         wrapper.innerHTML = htmlString;
 
         const card = new MatchCard(options, wrapper);
-        card.populate();
+        await card.populate();
         return card;
     }
 }
+

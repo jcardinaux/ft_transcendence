@@ -1,17 +1,19 @@
 import { logInfo, logError } from "../utils/logger.js";
 import { Win98Window } from "../components/Win98Window.js";
 import { MatchCard } from "./matchCard.js";
+import { matchOpts } from "./matchCard.js";
 
-interface Match{
+export interface Match{
     id: number,
     player1_id: number,
     player2_id: number,
     winner_id: number,
     score: string,
-    date: string
+    date: string,
+	gameName: string
 }
 
-type MatchArray = Match[];
+type MatchArray = matchOpts[];
 
 export function statsProgram(userInfo: any, app: HTMLElement){
 	const appButton = document.querySelector("#chart-icon");
@@ -41,7 +43,7 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 				const totLosses = showStats.element.querySelector('#total-losses') as HTMLSpanElement;
 				const matches : MatchArray = await response.json();
 				let wins = 0;
-				matches.forEach((match : Match) => {
+				matches.forEach((match : matchOpts) => {
 					if(match.winner_id == id)
 						wins++;
 				}); 
@@ -54,8 +56,10 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 					totLosses.textContent = `${losses}`;
 				
 				app.appendChild(showStats.element);
-				matches.forEach((match : Match) =>{
+				const matchDiv = showStats.element.querySelector('#match-list');
+				matches.forEach(async (match : matchOpts) =>{
 					const card = await MatchCard.init(match);
+					matchDiv?.appendChild(card.element);
 				})
 				logInfo(`retrived matches from user: ${username}`)}
 			}
