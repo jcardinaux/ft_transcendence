@@ -30,6 +30,7 @@ export const allUserMatchOpts = {
 export const addMatchOpts = {
 	schema: {
 		tags: ['Match'],
+		description: "score must be in this format 'x-y' x = player a score",
 		body:{
 			type: 'object',
 			required: ['player1_id', 'player2_id', 'winner_id', 'score'],

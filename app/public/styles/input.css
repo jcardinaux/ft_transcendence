@@ -71,6 +71,24 @@ body {
     @apply text-white text-xs flex flex-col items-center justify-center;
   }
 
+  /* Loading Bar Win98 Style */
+  .loading-bar-container {
+    @apply w-52 mx-auto;
+  }
+
+  .loading-bar-background {
+    @apply w-full h-5 bg-win98-gray-light border-2 border-solid win98-border-dark relative overflow-hidden;
+  }
+
+  .loading-bar-fill {
+    @apply h-full w-0 transition-all duration-100 ease-out;
+    background: theme('colors.win98-blue-dark');
+  }
+
+  .loading-text {
+    @apply text-sm text-black text-center mt-2 text-shadow-win98 font-normal;
+  }
+
 }
 
 ::-webkit-scrollbar {

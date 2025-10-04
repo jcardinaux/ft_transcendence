@@ -5,7 +5,7 @@ export const allMatch = async (req, reply) => {
 }
 
 export const allUserMatch = async (req, reply) => {
-	const {id} = req.param
+	const {id} = req.params
 	const matches = reply.server.db.prepare('SELECT * FROM matches WHERE player1_id = ? OR player2_id = ?').all(id, id)
 	reply.send(matches)
 }

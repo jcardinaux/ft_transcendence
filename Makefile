@@ -16,7 +16,7 @@ all: up
 up:
 	@echo "$(BLUE)Initializing ft_transcendence deployment...$(NC)"
 	@./create-env.sh
-	@docker-compose up -d
+	@docker compose up -d
 	@echo "$(GREEN)Services started$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Service endpoints:$(NC)"
@@ -29,29 +29,30 @@ up:
 # Stop all services gracefully
 down:
 	@echo "$(RED)Stopping services...$(NC)"
-	@docker-compose down
+	@docker compose down
 
 # Remove containers, volumes, and environment files
 clean:
 	@echo "$(RED)Cleaning deployment...$(NC)"
-	@docker-compose down -v
+	@docker compose down -v
 	@docker system prune -f
 	@rm -f .env
 
 # Display service logs with real-time output
 logs:
-	@docker-compose logs -f
+	@echo "$(YELLOW)Viewing logs...$(NC)"
+	@docker compose logs -f
 
 # Verify deployment status and service health
 test:
 	@echo "$(BLUE)Checking deployment status...$(NC)"
 	@echo "$(YELLOW)Service health check:$(NC)"
-	@docker-compose ps
+	@docker compose ps
 	@echo ""
 	@echo "$(YELLOW)ELK connectivity validation:$(NC)"
 	@if [ -f .env ]; then \
 		echo "$(GREEN)Environment configuration found$(NC)"; \
-		docker-compose exec -T elasticsearch curl -s -k -u "elastic:$$(grep ELASTIC_PASSWORD .env | cut -d= -f2)" "https://localhost:9200/_cluster/health" | grep -q "green\|yellow" && echo "$(GREEN)Elasticsearch cluster healthy$(NC)" || echo "$(RED)Elasticsearch cluster unavailable$(NC)"; \
+		docker compose exec -T elasticsearch curl -s -k -u "elastic:$$(grep ELASTIC_PASSWORD .env | cut -d= -f2)" "https://localhost:9200/_cluster/health" | grep -q "green\|yellow" && echo "$(GREEN)Elasticsearch cluster healthy$(NC)" || echo "$(RED)Elasticsearch cluster unavailable$(NC)"; \
 	else \
 		echo "$(RED)Environment not initialized - run 'make up'$(NC)"; \
 	fi
