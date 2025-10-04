@@ -877,7 +877,8 @@ async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightS
 			player1_id: gameMode.player1.id,
 			player2_id: gameMode.player2.id,
 			winner_id: winnerId,
-			score: score
+			score: score,
+			game_name: 'PONG'
 		};
 
 		console.log('Saving match to database:', matchData);
