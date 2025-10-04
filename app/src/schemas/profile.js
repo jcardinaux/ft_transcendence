@@ -7,9 +7,7 @@ import {showAllUseriInfo,
 		uploadAvatar,
 		addFriend,
 		deleteFriend,
-		getFriends,
-		userStats,
-		allUserMathces} from "../controllers/profile.js"
+		getFriends,} from "../controllers/profile.js"
 import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema } from "./utils.js"
 
 export const UsernameOpts = {
@@ -178,36 +176,3 @@ export const getFriendsOpts = {
 	handler: getFriends
 }
 
-export const userStatsOpts = {
-	schema:{
-		tags:['Profile'],
-		security: [{ bearerAuth: []}],
-		response: {
-			200: {
-				tipe: 'object',
-				properties: {
-					wins: {type: 'integer'},
-					losses: {type: 'integer'},
-					matchNumber: {type: 'integer'}
-				}
-			}
-		}
-	},
-	preHandler: (req, replay) => req.server.verifyJWT(req, replay),
-	handler: userStats
-}
-
-export const allUserMathcesOpts = {
-	schema: {
-		tags: ['Profile'],
-		security: [{ bearerAuth: []}],
-		response: {
-			200: {
-				type: 'array',
-				items: MatchSchema
-			}
-		}
-	},
-	preHandler: (req, replay) => req.server.verifyJWT(req, replay),
-	handler: allUserMathces
-}

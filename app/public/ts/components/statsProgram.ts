@@ -69,7 +69,40 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 
 		}
 		catch(err){
-			logError("an error occured trying to start stats program")
+			logError("an error occured trying to start stats program", err as {} | undefined)
 		}
 	})
+
+	async function loadUserStats(windowElement: HTMLElement) {
+		try {
+			const token = localStorage.getItem('token');
+			const response = await fetch('/api/profile/stats', {
+				method: 'GET',
+				headers: {
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (response.ok) {
+				const stats = await response.json();
+				console.log('📊 Statistiche caricate:', stats);
+
+				// Aggiorna gli elementi HTML con i dati
+				const winsElement = windowElement.querySelector('#total-wins');
+				const lossesElement = windowElement.querySelector('#total-losses');
+				const totalElement = windowElement.querySelector('#total-games');
+
+				if (winsElement) winsElement.textContent = stats.wins || '0';
+				if (lossesElement) lossesElement.textContent = stats.losses || '0';
+				if (totalElement) totalElement.textContent = stats.totalMatches || '0';
+
+				logInfo('Statistiche aggiornate nella UI');
+			} else {
+				logError('Errore nel caricamento statistiche:', response.status);
+			}
+		} catch (error) {
+			logError('Errore caricando statistiche:', error as {} | undefined);
+		}
+	}
 }

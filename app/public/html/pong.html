@@ -1,4 +1,197 @@
 <div>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <script src="pong.js"></script>
+    <!-- Menu di selezione modalità -->
+    <div id="game-mode-selection" style="padding: 20px; text-align: center;">
+        <h2 style="color: #333; margin-bottom: 20px;">🏓 Scegli la modalità di gioco</h2>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+            <button id="vs-cpu-btn" style="
+                padding: 15px 25px; 
+                background: #4CAF50; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 16px;
+                min-width: 130px;
+            ">
+                🤖 1 vs CPU
+            </button>
+            
+            <button id="vs-player-btn" style="
+                padding: 15px 25px; 
+                background: #2196F3; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 16px;
+                min-width: 130px;
+            ">
+                👥 1 vs 1
+            </button>
+
+            <button id="tournament-btn" style="
+                padding: 15px 25px; 
+                background: #FF9800; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 16px;
+                min-width: 130px;
+            ">
+                🏆 Torneo 8 
+            </button>
+        </div>
+    </div>
+
+    <!-- Form per inserire nome avversario (nascosto inizialmente) -->
+    <div id="player-selection" style="display: none; padding: 20px; text-align: center;">
+        <h3 style="color: #333; margin-bottom: 15px;">Inserisci il nome dell'avversario</h3>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="opponent-username" placeholder="Username avversario" style="
+                padding: 10px; 
+                border: 2px solid #ddd; 
+                border-radius: 5px; 
+                font-size: 16px;
+                width: 200px;
+            ">
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="start-pvp-btn" style="
+                padding: 10px 20px; 
+                background: #4CAF50; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+            ">
+                Inizia Partita
+            </button>
+            <button id="back-to-menu-btn" style="
+                padding: 10px 20px; 
+                background: #f44336; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+            ">
+                Torna Indietro
+            </button>
+        </div>
+        <div id="user-validation-message" style="margin-top: 15px; font-weight: bold;"></div>
+    </div>
+
+    <!-- Setup Torneo (nascosto inizialmente) -->
+    <div id="tournament-setup" style="display: none; padding: 20px;">
+        <h3 style="color: #333; margin-bottom: 20px; text-align: center;">🏆 Setup Torneo (8 Giocatori)</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 600px; margin: 0 auto;">
+            <!-- Player 1 è sempre l'utente loggato -->
+            <div style="display: flex; align-items: center; padding: 10px; background: #e8f5e8; border-radius: 5px;">
+                <span style="font-weight: bold; margin-right: 10px;">1.</span>
+                <span id="current-user-display" style="color: #2e7d32;">Tu (utente corrente)</span>
+            </div>
+            
+            <!-- Players 2-8 -->
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">2.</span>
+                <input type="text" id="player-2" placeholder="Username giocatore 2" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="2" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">3.</span>
+                <input type="text" id="player-3" placeholder="Username giocatore 3" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="3" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">4.</span>
+                <input type="text" id="player-4" placeholder="Username giocatore 4" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="4" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">5.</span>
+                <input type="text" id="player-5" placeholder="Username giocatore 5" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="5" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">6.</span>
+                <input type="text" id="player-6" placeholder="Username giocatore 6" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="6" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">7.</span>
+                <input type="text" id="player-7" placeholder="Username giocatore 7" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="7" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <span style="font-weight: bold; margin-right: 10px; width: 20px;">8.</span>
+                <input type="text" id="player-8" placeholder="Username giocatore 8" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
+                <button class="verify-player-btn" data-player="8" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+            </div>
+        </div>
+
+        <div id="tournament-validation-message" style="margin: 20px 0; text-align: center; font-weight: bold;"></div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+            <button id="start-tournament-btn" style="
+                padding: 12px 25px; 
+                background: #FF9800; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 16px;
+            " disabled>
+                🏆 Inizia Torneo
+            </button>
+            <button id="back-to-menu-tournament-btn" style="
+                padding: 12px 25px; 
+                background: #f44336; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+            ">
+                Torna al Menu
+            </button>
+        </div>
+    </div>
+
+    <!-- Bracket Torneo (nascosto inizialmente) -->
+    <div id="tournament-bracket" style="display: none; padding: 20px;">
+        <h3 style="text-align: center; margin-bottom: 20px;">🏆 Bracket del Torneo</h3>
+        <div id="bracket-display" style="text-align: center; margin-bottom: 20px;"></div>
+        <div id="current-match-info" style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px;"></div>
+        <div style="text-align: center;">
+            <button id="start-current-match-btn" style="
+                padding: 15px 30px; 
+                background: #4CAF50; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 16px;
+            ">
+                Inizia Match
+            </button>
+        </div>
+    </div>
+
+    <!-- Canvas del gioco (nascosto inizialmente) -->
+    <div id="game-container" style="display: none;">
+        <div id="game-info" style="text-align: center; padding: 10px; background: #f0f0f0; margin-bottom: 10px;">
+            <span id="player-names"></span>
+            <span style="margin-left: 20px; font-size: 14px; color: #666;">
+                Controlli: Player 1 (W/S) | Player 2 (↑/↓) | Restart (R)
+            </span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600" style="border: 2px solid #333;"></canvas>
+    </div>
 </div>
