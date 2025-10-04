@@ -8,7 +8,7 @@ export interface matchOpts{
     winner_id: number,
     score: string,
     date: string,
-    gameName: string
+    game_name: string
 }
 
 
@@ -40,8 +40,8 @@ async getName(id: string){
 
 async populate(){
     // Game name e ID
-    this.element.querySelector('.game-name-short')!.textContent = this.options.gameName;
-    this.element.querySelector('.game-name')!.textContent = this.options.gameName;
+    this.element.querySelector('.game-name-short')!.textContent = this.options.game_name;
+    this.element.querySelector('.game-name')!.textContent = this.options.game_name;
     this.element.querySelector('.match-id')!.textContent = `#${this.options.id}`;
     
     // Players

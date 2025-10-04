@@ -49,6 +49,7 @@ export const MatchSchema = {
         player2_id: {type: 'integer'},
         winner_id: {type: 'integer'},
         score: {type: 'string'},
+        game_name: {type: 'string'}, 
         date: {type: 'string'}
     }
 }

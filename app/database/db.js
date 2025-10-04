@@ -27,6 +27,7 @@ db.exec(`
   player2_id INTEGER,
   winner_id INTEGER,
   score TEXT,
+  game_name TEXT,
   date TEXT DEFAULT (datetime('now'))
   );
 `)

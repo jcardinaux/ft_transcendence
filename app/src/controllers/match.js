@@ -11,13 +11,13 @@ export const allUserMatch = async (req, reply) => {
 }
 
 export const addMatch = async (req, reply) => {
-	const {player1_id, player2_id, winner_id, score} = req.body
+	const {player1_id, player2_id, winner_id, score, game_name} = req.body
 	if (winner_id !== player1_id && winner_id !== player2_id)
 		reply.code(400).send({message: "winner should be player_1 or player_2"})
 	else {
-		const stmt = reply.server.db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score) VALUES (?, ?, ?, ?)')
-		const result  = stmt.run(player1_id, player2_id, winner_id, score)
-		reply.send({player1_id, player2_id, winner_id, score})
+		const stmt = reply.server.db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score, game_name) VALUES (?, ?, ?, ?, ?)')
+		const result  = stmt.run(player1_id, player2_id, winner_id, score, game_name)
+		reply.send({player1_id, player2_id, winner_id, score, game_name})
 	}
 }
 

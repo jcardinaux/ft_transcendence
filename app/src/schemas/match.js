@@ -38,6 +38,7 @@ export const addMatchOpts = {
 				player1_id: {type: 'integer'},
         		player2_id: {type: 'integer'},
         		winner_id: {type: 'integer'},
+				game_name: {type: 'string'},
         		score: {type: 'string'},
 			}
 		},
