@@ -15,9 +15,16 @@ export const addMatch = async (req, reply) => {
 	if (winner_id !== player1_id && winner_id !== player2_id)
 		reply.code(400).send({message: "winner should be player_1 or player_2"})
 	else {
-		const stmt = reply.server.db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score, game_name) VALUES (?, ?, ?, ?, ?)')
-		const result  = stmt.run(player1_id, player2_id, winner_id, score, game_name)
-		reply.send({player1_id, player2_id, winner_id, score, game_name})
+		// Usa game_name solo se è presente, altrimenti inserisci senza
+		if (game_name) {
+			const stmt = reply.server.db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score, game_name) VALUES (?, ?, ?, ?, ?)')
+			const result = stmt.run(player1_id, player2_id, winner_id, score, game_name)
+			reply.send({player1_id, player2_id, winner_id, score, game_name})
+		} else {
+			const stmt = reply.server.db.prepare('INSERT INTO matches (player1_id, player2_id, winner_id, score) VALUES (?, ?, ?, ?)')
+			const result = stmt.run(player1_id, player2_id, winner_id, score)
+			reply.send({player1_id, player2_id, winner_id, score})
+		}
 	}
 }
 

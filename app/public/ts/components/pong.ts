@@ -1,4 +1,4 @@
-// Pong in TypeScript (da compilare in JS e usare in una pagina HTML)
+// pong in TypeScript (da compilare in JS e usare in una pagina HTML)
 // Usa <canvas id="gameCanvas" width="800" height="600"></canvas> nell'HTML
 
 
@@ -8,27 +8,27 @@ import { Win98Window } from "../components/Win98Window.js";
 
 export function pong(userInfo: any, app: HTMLElement){
 	const appButton = document.querySelector("#game-icon");
-	let showPong: Win98Window | null = null;
+	let showpong: Win98Window | null = null;
 
 	appButton?.addEventListener('click', async () => {
 		const { id, username, display_name, email, avatar} = userInfo;
 		
-		if(showPong) return;
+		if(showpong) return;
 		try{
 			const rawHtml = await fetch ('/html/pong.html');
 			const windowHtml = await rawHtml.text();
-			showPong = new Win98Window({
-				title: 'Pong Game',
+			showpong = new Win98Window({
+				title: 'pong Game',
 				content: windowHtml,
 				onClose: () => {
-					showPong = null;
+					showpong = null;
 				}
 			});
-			app.appendChild(showPong.element);	
+			app.appendChild(showpong.element);	
 			
-			// Inizializza il menu di selezione invece del gioco diretto
+			// Inizializza la selezione del gioco invece del menu di modalità
 			setTimeout(() => {
-				initializeGameModeSelection(showPong!.element, userInfo);
+				initializeGameSelection(showpong!.element, userInfo);
 			}, 100);
 		}
 		catch(err){
@@ -40,6 +40,7 @@ export function pong(userInfo: any, app: HTMLElement){
 // Tipi per le modalità di gioco
 interface GameMode {
 	type: '1v1' | '1vsCPU' | 'tournament';
+	game_name: 'pong' | 'peow';
 	player1: { username: string, display_name: string, id: number };
 	player2?: { username: string, display_name: string, id: number };
 	tournamentData?: TournamentData;
@@ -61,6 +62,7 @@ interface TournamentMatch {
 }
 
 interface TournamentData {
+	game_name: 'pong' | 'peow';
 	players: TournamentPlayer[];
 	matches: TournamentMatch[];
 	currentRound: number;
@@ -71,32 +73,73 @@ interface TournamentData {
 // Mappa per salvare i risultati: userId -> [totalMatches, totalWins, totalLoss]
 const tournamentResults = new Map<number, [number, number, number]>();
 
+// Funzione per inizializzare la selezione del gioco (pong o peow)
+function initializeGameSelection(windowElement: HTMLElement, currentUser: any) {
+	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
+	const pongGameBtn = windowElement.querySelector('#pong-game-btn') as HTMLButtonElement;
+	const peowGameBtn = windowElement.querySelector('#peow-game-btn') as HTMLButtonElement;
+
+	if (!gameSelection || !pongGameBtn || !peowGameBtn) {
+		logError('Elementi HTML della selezione gioco non trovati!');
+		return;
+	}
+
+	// Pulsante per pong
+	pongGameBtn.addEventListener('click', () => {
+		initializeGameModeSelection(windowElement, currentUser, 'pong');
+	});
+
+	// Pulsante per peow
+	peowGameBtn.addEventListener('click', () => {
+		initializeGameModeSelection(windowElement, currentUser, 'peow');
+	});
+}
+
 // Funzione per inizializzare la selezione modalità di gioco
-function initializeGameModeSelection(windowElement: HTMLElement, currentUser: any) {
+function initializeGameModeSelection(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
 	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
 	const playerSelection = windowElement.querySelector('#player-selection') as HTMLElement;
 	const gameContainer = windowElement.querySelector('#game-container') as HTMLElement;
+	const gameModeTitle = windowElement.querySelector('#game-mode-title') as HTMLElement;
 	
 	const vsCpuBtn = windowElement.querySelector('#vs-cpu-btn') as HTMLButtonElement;
 	const vsPlayerBtn = windowElement.querySelector('#vs-player-btn') as HTMLButtonElement;
 	const tournamentBtn = windowElement.querySelector('#tournament-btn') as HTMLButtonElement;
 	const startPvpBtn = windowElement.querySelector('#start-pvp-btn') as HTMLButtonElement;
 	const backToMenuBtn = windowElement.querySelector('#back-to-menu-btn') as HTMLButtonElement;
+	const backToGameSelectionBtn = windowElement.querySelector('#back-to-game-selection-btn') as HTMLButtonElement;
 	const opponentInput = windowElement.querySelector('#opponent-username') as HTMLInputElement;
 	const validationMessage = windowElement.querySelector('#user-validation-message') as HTMLElement;
 
-	if (!modeSelection || !playerSelection || !gameContainer) {
+	if (!gameSelection || !modeSelection || !playerSelection || !gameContainer) {
 		logError('Elementi HTML del menu non trovati!');
 		return;
 	}
 
-	// Modalità 1 vs CPU
+	// Nascondi la selezione del gioco e mostra la selezione delle modalità
+	gameSelection.style.display = 'none';
+	modeSelection.style.display = 'block';
+
+	// Aggiorna il titolo in base al gioco selezionato
+	if (gameModeTitle) {
+		const gameIcon = selectedGame === 'pong' ? '🏓' : '⚡';
+		gameModeTitle.textContent = `${gameIcon} ${selectedGame} - Scegli la modalità`;
+	}
+
+	// Modalità Practice vs CPU
 	vsCpuBtn?.addEventListener('click', () => {
-		const gameMode: GameMode = {
-			type: '1vsCPU',
-			player1: currentUser
-		};
-		startGame(windowElement, gameMode);
+		if (selectedGame === 'pong') {
+			const gameMode: GameMode = {
+				type: '1vsCPU',
+				game_name: 'pong',
+				player1: currentUser
+			};
+			startGame(windowElement, gameMode);
+		} else {
+			// Per ora peow non fa nulla, ma la struttura è pronta
+			console.log(`${selectedGame} Practice vs CPU non ancora implementato`);
+		}
 	});
 
 	// Modalità 1 vs 1
@@ -107,10 +150,23 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 
 	// Modalità Torneo
 	tournamentBtn?.addEventListener('click', () => {
-		initializeTournamentSetup(windowElement, currentUser);
+		if (selectedGame === 'pong') {
+			initializeTournamentSetup(windowElement, currentUser, selectedGame);
+		} else {
+			// Per ora peow non fa nulla, ma la struttura è pronta
+			console.log(`${selectedGame} Tournament non ancora implementato`);
+		}
 	});
 
-	// Torna al menu principale
+	// Torna alla selezione del gioco
+	backToGameSelectionBtn?.addEventListener('click', () => {
+		modeSelection.style.display = 'none';
+		gameSelection.style.display = 'block';
+		if (validationMessage) validationMessage.textContent = '';
+		if (opponentInput) opponentInput.value = '';
+	});
+
+	// Torna al menu delle modalità
 	backToMenuBtn?.addEventListener('click', () => {
 		playerSelection.style.display = 'none';
 		modeSelection.style.display = 'block';
@@ -164,6 +220,7 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 				setTimeout(() => {
 					const gameMode: GameMode = {
 						type: '1v1',
+						game_name: selectedGame,
 						player1: currentUser,
 						player2: opponentUser
 					};
@@ -223,14 +280,18 @@ function startGame(windowElement: HTMLElement, gameMode: GameMode) {
 		}
 	}
 
-	// Avvia il gioco
-	initializePongGame(windowElement, gameMode);
+	// Avvia il gioco appropriato
+	if (gameMode.game_name === 'peow') {
+		initializepeowGame(windowElement, gameMode);
+	} else {
+		initializepongGame(windowElement, gameMode);
+	}
 }
 
 // =============== FUNZIONI PER LA GESTIONE DEL TORNEO ===============
 
 // Funzione per inizializzare il setup del torneo
-function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any) {
+function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
 	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
 	const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
 	const currentUserDisplay = windowElement.querySelector('#current-user-display') as HTMLElement;
@@ -250,14 +311,14 @@ function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any)
 	}
 	
 	// Inizializza gli event listeners per il setup del torneo
-	initializeTournamentEventListeners(windowElement, currentUser);
+	initializeTournamentEventListeners(windowElement, currentUser, selectedGame);
 	
 	// Controlla inizialmente lo stato dei pulsanti
 	checkAllPlayersVerified(windowElement);
 }
 
 // Funzione per inizializzare tutti gli event listeners del torneo
-function initializeTournamentEventListeners(windowElement: HTMLElement, currentUser: any) {
+function initializeTournamentEventListeners(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
 	const verifyButtons = windowElement.querySelectorAll('.verify-player-btn') as NodeListOf<HTMLButtonElement>;
 	const startTournamentBtn = windowElement.querySelector('#start-tournament-btn') as HTMLButtonElement;
 	const backToMenuTournamentBtn = windowElement.querySelector('#back-to-menu-tournament-btn') as HTMLButtonElement;
@@ -283,7 +344,7 @@ function initializeTournamentEventListeners(windowElement: HTMLElement, currentU
 	if (startTournamentBtn) {
 		startTournamentBtn.addEventListener('click', () => {
 			console.log('Click su Start Tournament');
-			startTournament(windowElement, currentUser);
+			startTournament(windowElement, currentUser, selectedGame);
 		});
 	} else {
 		logError('Pulsante start tournament non trovato durante l\'inizializzazione!');
@@ -426,7 +487,7 @@ function checkAllPlayersVerified(windowElement: HTMLElement) {
 }
 
 // Funzione per iniziare il torneo
-function startTournament(windowElement: HTMLElement, currentUser: any) {
+function startTournament(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
 	// Raccoglie tutti i giocatori verificati
 	const players: TournamentPlayer[] = [];
 	
@@ -470,7 +531,7 @@ function startTournament(windowElement: HTMLElement, currentUser: any) {
 	});
 	
 	// Crea il torneo
-	const tournamentData: TournamentData = createTournamentBracket(players);
+	const tournamentData: TournamentData = createTournamentBracket(players, selectedGame);
 	
 	// Nascondi il setup e mostra il bracket
 	const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
@@ -487,7 +548,7 @@ function startTournament(windowElement: HTMLElement, currentUser: any) {
 }
 
 // Funzione per creare il bracket del torneo
-function createTournamentBracket(players: TournamentPlayer[]): TournamentData {
+function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pong' | 'peow'): TournamentData {
 	// Mescola i giocatori casualmente per evitare sempre lo stesso ordine
 	const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
 	
@@ -504,6 +565,7 @@ function createTournamentBracket(players: TournamentPlayer[]): TournamentData {
 	}
 	
 	return {
+		game_name: selectedGame,
 		players: shuffledPlayers,
 		matches,
 		currentRound: 1,
@@ -677,6 +739,7 @@ function startCurrentTournamentMatch(windowElement: HTMLElement, tournamentData:
 	// Crea la modalità di gioco per il match del torneo
 	const gameMode: GameMode = {
 		type: 'tournament',
+		game_name: tournamentData.game_name,
 		player1: currentMatch.player1,
 		player2: currentMatch.player2,
 		tournamentData: tournamentData
@@ -796,6 +859,7 @@ function showValidationMessage(element: HTMLElement | null, message: string, col
 function backToMainMenu(windowElement: HTMLElement) {
 	// Nascondi tutte le schermate
 	const screens = [
+		'#game-selection',
 		'#game-mode-selection',
 		'#player-selection', 
 		'#tournament-setup',
@@ -808,9 +872,9 @@ function backToMainMenu(windowElement: HTMLElement) {
 		if (element) element.style.display = 'none';
 	});
 	
-	// Mostra il menu principale
-	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
-	if (modeSelection) modeSelection.style.display = 'block';
+	// Mostra la selezione del gioco (menu principale)
+	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
+	if (gameSelection) gameSelection.style.display = 'block';
 	
 	// Reset di tutti i campi del torneo
 	resetTournamentSetup(windowElement);
@@ -856,17 +920,22 @@ function resetTournamentSetup(windowElement: HTMLElement) {
 
 // Funzione per salvare i risultati delle partite nel database
 async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightScore: number, winner: 'player1' | 'player2') {
+	console.log('🔍 saveMatchToDatabase CHIAMATA!', { gameMode, leftScore, rightScore, winner });
+	
 	// Ignora le partite contro la CPU
 	if (gameMode.type === '1vsCPU') {
-		console.log('CPU practice match - not saving to database');
+		console.log('❌ CPU match - non salvato');
 		return;
 	}
 
 	// Verifica che abbiamo entrambi i giocatori
 	if (!gameMode.player1 || !gameMode.player2) {
+		console.log('❌ Dati giocatori mancanti');
 		logError('Cannot save match: missing player data');
 		return;
 	}
+
+	console.log('✅ Procedo con salvataggio...');
 
 	try {
 		// Determina il vincitore e prepara i dati
@@ -878,10 +947,10 @@ async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightS
 			player2_id: gameMode.player2.id,
 			winner_id: winnerId,
 			score: score,
-			game_name: 'PONG'
+			game_name: gameMode.game_name || 'pong' // Aggiungilo quando vuoi
 		};
 
-		console.log('Saving match to database:', matchData);
+		console.log('🚀 Dati da inviare:', matchData);
 
 		// Effettua la chiamata API
 		const response = await fetch('/api/matches/addMatch', {
@@ -892,23 +961,27 @@ async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightS
 			body: JSON.stringify(matchData)
 		});
 
+		console.log('📡 Risposta API:', response.status, response.ok);
+
 		if (response.ok) {
 			const result = await response.json();
-			console.log('Match saved successfully:', result);
+			console.log('✅ Match saved successfully:', result);
 		} else {
 			const errorText = await response.text();
+			console.log('❌ Errore API:', errorText);
 			logError(`Failed to save match: ${response.status} - ${errorText}`);
 		}
 	} catch (error) {
+		console.log('❌ Errore catch:', error);
 		logError('Error saving match to database:', error as any);
 	}
 }
 
 // vecchio codice inizia da qui
-function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
+function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	const canvas = windowElement.querySelector('#gameCanvas') as HTMLCanvasElement;
 	if (!canvas) {
-		logError('Canvas non trovato nella finestra Pong!');
+		logError('Canvas non trovato nella finestra pong!');
 		return;
 	}
 	
@@ -976,7 +1049,7 @@ function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	const ball = new Ball(canvas.width / 2, canvas.height / 2);
 	let leftScore = 0;
 	let rightScore = 0;
-	let speedPongs = 0;
+	let speedpongs = 0;
 	let gameRunning = true;  
 	let winner: string | null = null;  
 	const WINNING_SCORE = 10; 
@@ -1376,5 +1449,415 @@ function initializePongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	if (isAIEnabled) {
 		enemy();
 	}
+	gameLoop();
+}
+
+// =============== peow GAME IMPLEMENTATION ===============
+
+function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
+	const canvas = windowElement.querySelector('#gameCanvas') as HTMLCanvasElement;
+	if (!canvas) {
+		logError('Canvas non trovato nella finestra peow!');
+		return;
+	}
+	
+	canvas.width = 800;
+	canvas.height = 600;
+	const ctx = canvas.getContext('2d')!;
+
+	// Variabile per disabilitare l'AI in modalità PvP
+	const isAIEnabled = !gameMode || gameMode.type === '1vsCPU';
+
+	// Paddle class per peow
+	class peowPaddle {
+		public x: number;
+		public y: number;
+		public originalHeight: number = 120;
+		public currentHeight: number = 120;
+		public width: number = 20;
+		public speed: number = 12;
+		public hitCount: number = 0;
+
+		constructor(x: number, y: number) {
+			this.x = x;
+			this.y = y;
+		}
+
+		move(dy: number) {
+			this.y += dy;
+			// Limiti bordo
+			if (this.y < 0) this.y = 0;
+			if (this.y + this.currentHeight > canvas.height) this.y = canvas.height - this.currentHeight;
+		}
+
+		getCenter(): { x: number, y: number } {
+			return {
+				x: this.x + this.width / 2,
+				y: this.y + this.currentHeight / 2
+			};
+		}
+
+		takeDamage(): boolean {
+			this.hitCount++;
+			this.currentHeight = this.originalHeight * Math.pow(2/3, this.hitCount);
+			
+			// Game over se colpito 3 volte
+			return this.hitCount >= 3;
+		}
+
+		draw(ctx: CanvasRenderingContext2D) {
+			// Paddle
+			ctx.fillStyle = '#fff';
+			ctx.fillRect(this.x, this.y, this.width, this.currentHeight);
+			
+			// Centro del paddle (punto di spawn dei proiettili)
+			const center = this.getCenter();
+			ctx.fillStyle = '#ff0000';
+			ctx.beginPath();
+			ctx.arc(center.x, center.y, 3, 0, Math.PI * 2);
+			ctx.fill();
+		}
+	}
+
+	// Bullet class
+	class Bullet {
+		public x: number;
+		public y: number;
+		public dx: number;
+		public dy: number = 0;
+		public radius: number = 4;
+		public active: boolean = true;
+
+		constructor(x: number, y: number, direction: number) {
+			this.x = x;
+			this.y = y;
+			this.dx = direction * 10// velocità proiettile
+		}
+
+		move() {
+			this.x += this.dx;
+			this.y += this.dy;
+			
+			// Rimuovi se esce dallo schermo
+			if (this.x < 0 || this.x > canvas.width) {
+				this.active = false;
+			}
+		}
+
+		draw(ctx: CanvasRenderingContext2D) {
+			if (!this.active) return;
+			
+			ctx.fillStyle = '#ffff00';
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+			ctx.fill();
+		}
+
+		checkCollision(paddle: peowPaddle): boolean {
+			if (!this.active) return false;
+			
+			return this.x + this.radius > paddle.x &&
+				   this.x - this.radius < paddle.x + paddle.width &&
+				   this.y + this.radius > paddle.y &&
+				   this.y - this.radius < paddle.y + paddle.currentHeight;
+		}
+	}
+
+	// Game state
+	let gameRunning = true;
+	let winner: string | null = null;
+	let leftPaddle = new peowPaddle(30, canvas.height / 2 - 60);
+	let rightPaddle = new peowPaddle(canvas.width - 50, canvas.height / 2 - 60);
+	let bullets: Bullet[] = [];
+
+	// Input state
+	let leftUpPressed = false;
+	let leftDownPressed = false;
+	let leftShootPressed = false;
+	let rightUpPressed = false;
+	let rightDownPressed = false;
+	let rightShootPressed = false;
+
+	// Cooldown per i proiettili (per evitare spam)
+	let leftShootCooldown = 0;
+	let rightShootCooldown = 0;
+	const shootCooldownTime = 10// frames
+
+	// Event listeners
+	const keydownHandler = (e: KeyboardEvent) => {
+		switch(e.key.toLowerCase()) {
+			case 'w': leftUpPressed = true; break;
+			case 's': leftDownPressed = true; break;
+			case 'd': 
+				if (!leftShootPressed && leftShootCooldown <= 0) {
+					leftShootPressed = true;
+					shootBullet(leftPaddle, 1);
+					leftShootCooldown = shootCooldownTime;
+				}
+				break;
+			case 'arrowup': rightUpPressed = true; break;
+			case 'arrowdown': rightDownPressed = true; break;
+			case 'arrowleft':
+				if (!rightShootPressed && rightShootCooldown <= 0) {
+					rightShootPressed = true;
+					shootBullet(rightPaddle, -1);
+					rightShootCooldown = shootCooldownTime;
+				}
+				break;
+			case 'r':
+				if (!gameRunning) restartGame();
+				break;
+		}
+	};
+
+	const keyupHandler = (e: KeyboardEvent) => {
+		switch(e.key.toLowerCase()) {
+			case 'w': leftUpPressed = false; break;
+			case 's': leftDownPressed = false; break;
+			case 'd': leftShootPressed = false; break;
+			case 'arrowup': rightUpPressed = false; break;
+			case 'arrowdown': rightDownPressed = false; break;
+			case 'arrowleft': rightShootPressed = false; break;
+		}
+	};
+
+	document.addEventListener('keydown', keydownHandler);
+	document.addEventListener('keyup', keyupHandler);
+
+	function shootBullet(paddle: peowPaddle, direction: number) {
+		const center = paddle.getCenter();
+		bullets.push(new Bullet(center.x, center.y, direction));
+	}
+
+	function updatePaddles() {
+		// Left paddle (W/S)
+		if (leftUpPressed) leftPaddle.move(-leftPaddle.speed);
+		if (leftDownPressed) leftPaddle.move(leftPaddle.speed);
+
+		// Right paddle (Up/Down) - AI o giocatore
+		if (isAIEnabled && gameRunning) {
+			// AI semplice per il paddle destro
+			const paddleCenter = rightPaddle.y + rightPaddle.currentHeight / 2;
+			const targetY = leftPaddle.y + leftPaddle.currentHeight / 2;
+			
+			if (paddleCenter < targetY - 20) {
+				rightPaddle.move(rightPaddle.speed * 0.7);
+			} else if (paddleCenter > targetY + 20) {
+				rightPaddle.move(-rightPaddle.speed * 0.7);
+			}
+			
+			// AI spara occasionalmente
+			if (Math.random() < 0.02 && rightShootCooldown <= 0) {
+				shootBullet(rightPaddle, -1);
+				rightShootCooldown = shootCooldownTime;
+			}
+		} else {
+			// Controllo umano
+			if (rightUpPressed) rightPaddle.move(-rightPaddle.speed);
+			if (rightDownPressed) rightPaddle.move(rightPaddle.speed);
+		}
+	}
+
+	function updateBullets() {
+		// Aggiorna cooldown
+		if (leftShootCooldown > 0) leftShootCooldown--;
+		if (rightShootCooldown > 0) rightShootCooldown--;
+
+		// Aggiorna posizione proiettili
+		bullets.forEach(bullet => bullet.move());
+
+		// Controlla collisioni
+		bullets.forEach(bullet => {
+			if (!bullet.active) return;
+
+			// Collisione con paddle sinistro
+			if (bullet.dx < 0 && bullet.checkCollision(leftPaddle)) {
+				bullet.active = false;
+				const gameOver = leftPaddle.takeDamage();
+				if (gameOver) {
+					endGame('right');
+				}
+			}
+			
+			// Collisione con paddle destro
+			if (bullet.dx > 0 && bullet.checkCollision(rightPaddle)) {
+				bullet.active = false;
+				const gameOver = rightPaddle.takeDamage();
+				if (gameOver) {
+					endGame('left');
+				}
+			}
+		});
+
+		// Rimuovi proiettili inattivi
+		bullets = bullets.filter(bullet => bullet.active);
+	}
+
+	function endGame(winnerSide: 'left' | 'right') {
+		gameRunning = false;
+		
+		if (winnerSide === 'left') {
+			winner = gameMode?.player1.display_name || gameMode?.player1.username || "Player 1 (W/S)";
+		} else {
+			winner = isAIEnabled ? "CPU" : (gameMode?.player2?.display_name || gameMode?.player2?.username || "Player 2 (↑/↓)");
+		}
+
+		// Salva il match se abbiamo i dati del gameMode
+		if (gameMode) {
+			// Determina il vincitore per il salvataggio
+			const matchWinner = winnerSide === 'left' ? 'player1' : 'player2';
+			
+			// Per peow, usiamo i colpi subiti come "punteggio"
+			const leftScore = leftPaddle.hitCount;
+			const rightScore = rightPaddle.hitCount;
+			
+			// Salva nel database
+			saveMatchToDatabase(gameMode, leftScore, rightScore, matchWinner).then(() => {
+				logInfo('Match peow salvato nel database');
+			}).catch(error => {
+				logError('Errore nel salvataggio del match peow:', error);
+			});
+
+			// Gestisci torneo se necessario
+			if (gameMode.type === 'tournament' && gameMode.tournamentData) {
+				setTimeout(() => {
+					handleTournamentMatchEnd(windowElement, gameMode, matchWinner);
+				}, 2000);
+			}
+		}
+	}
+
+	function draw() {
+		// Pulisci canvas
+		ctx.fillStyle = '#000';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// Disegna linea centrale
+		ctx.setLineDash([10, 10]);
+		ctx.strokeStyle = '#fff';
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(canvas.width / 2, 0);
+		ctx.lineTo(canvas.width / 2, canvas.height);
+		ctx.stroke();
+		ctx.setLineDash([]);
+
+		// Disegna paddles
+		leftPaddle.draw(ctx);
+		rightPaddle.draw(ctx);
+
+		// Disegna proiettili
+		bullets.forEach(bullet => bullet.draw(ctx));
+
+		// Disegna hits
+		drawHits();
+
+		// Disegna game over se necessario
+		if (!gameRunning) {
+			drawGameOver();
+		}
+	}
+
+	function drawHits() {
+		ctx.fillStyle = '#fff';
+		ctx.font = '24px Arial';
+		
+		// Colpi giocatore sinistro
+		ctx.fillText(`Hits: ${leftPaddle.hitCount}/3`, 50, 50);
+		
+		// Colpi giocatore destro
+		ctx.textAlign = 'right';
+		ctx.fillText(`Hits: ${rightPaddle.hitCount}/3`, canvas.width - 50, 50);
+		ctx.textAlign = 'left';
+	}
+
+	function drawGameOver() {
+		if (!gameRunning && winner) {
+			// Sfondo semi-trasparente
+			ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			
+			// Riquadro centrale
+			ctx.fillStyle = "#333";
+			ctx.fillRect(canvas.width/2 - 200, canvas.height/2 - 100, 400, 200);
+			ctx.strokeStyle = "#FFD700";
+			ctx.lineWidth = 3;
+			ctx.strokeRect(canvas.width/2 - 200, canvas.height/2 - 100, 400, 200);
+			
+			// Testo vincitore
+			ctx.fillStyle = "#FFD700"; 
+			ctx.font = 'bold 36px Arial';
+			ctx.textAlign = 'center';
+			ctx.fillText("🎯 peow OVER! 🎯", canvas.width / 2, canvas.height / 2 - 40);
+			
+			ctx.fillStyle = "#FFF";
+			ctx.font = 'bold 28px Arial';
+			ctx.fillText(`Winner: ${winner}`, canvas.width / 2, canvas.height / 2 + 10);
+			
+			ctx.font = '20px Arial';
+			ctx.fillText("Press R to restart", canvas.width / 2, canvas.height / 2 + 50);
+			
+			ctx.textAlign = 'left';
+		}
+	}
+
+	function restartGame() {
+		// Reset game state
+		gameRunning = true;
+		winner = null;
+		bullets = [];
+		leftShootCooldown = 0;
+		rightShootCooldown = 0;
+		
+		// Reset input
+		leftUpPressed = false;
+		leftDownPressed = false;
+		leftShootPressed = false;
+		rightUpPressed = false;
+		rightDownPressed = false;
+		rightShootPressed = false;
+		
+		// Reset paddles
+		leftPaddle = new peowPaddle(30, canvas.height / 2 - 60);
+		rightPaddle = new peowPaddle(canvas.width - 50, canvas.height / 2 - 60);
+	}
+
+	function gameLoop() {
+		if (gameRunning) {
+			updatePaddles();
+			updateBullets();
+		}
+		
+		draw();
+		requestAnimationFrame(gameLoop);
+	}
+
+	// Cleanup function
+	const cleanup = () => {
+		document.removeEventListener('keydown', keydownHandler);
+			document.removeEventListener('keyup', keyupHandler);
+	};
+
+	// Aggiungi cleanup quando la finestra viene chiusa
+	windowElement.addEventListener('beforeunload', cleanup);
+	
+	// Observer per quando l'elemento viene rimosso dal DOM
+	const observer = new MutationObserver((mutations) => {
+		mutations.forEach((mutation) => {
+			mutation.removedNodes.forEach((node) => {
+				if (node === windowElement || (node instanceof Element && node.contains(windowElement))) {
+					cleanup();
+					observer.disconnect();
+				}
+			});
+		});
+	});
+	
+	observer.observe(document.body, {
+		childList: true,
+		subtree: true
+	});
+
+	// Avvia il gioco
 	gameLoop();
 }
