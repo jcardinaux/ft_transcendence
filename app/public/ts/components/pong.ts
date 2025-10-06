@@ -136,9 +136,13 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 				player1: currentUser
 			};
 			startGame(windowElement, gameMode);
-		} else {
-			// Per ora peow non fa nulla, ma la struttura è pronta
-			console.log(`${selectedGame} Practice vs CPU non ancora implementato`);
+		} else if (selectedGame === 'peow') {
+			const gameMode: GameMode = {
+				type: '1vsCPU',
+				game_name: 'peow',
+				player1: currentUser
+			};
+			startGame(windowElement, gameMode);
 		}
 	});
 
@@ -152,9 +156,8 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 	tournamentBtn?.addEventListener('click', () => {
 		if (selectedGame === 'pong') {
 			initializeTournamentSetup(windowElement, currentUser, selectedGame);
-		} else {
-			// Per ora peow non fa nulla, ma la struttura è pronta
-			console.log(`${selectedGame} Tournament non ancora implementato`);
+		} else if (selectedGame === 'peow') {
+			initializeTournamentSetup(windowElement, currentUser, selectedGame);
 		}
 	});
 
@@ -486,8 +489,8 @@ function checkAllPlayersVerified(windowElement: HTMLElement) {
 	}
 }
 
-// Funzione per iniziare il torneo
-function startTournament(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+// Funzione per iniziare il torneo (MODIFICATA per usare il ranking)
+async function startTournament(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
 	// Raccoglie tutti i giocatori verificati
 	const players: TournamentPlayer[] = [];
 	
@@ -522,43 +525,111 @@ function startTournament(windowElement: HTMLElement, currentUser: any, selectedG
 		showValidationMessage(validationMessage, '❌ Tutti gli 8 giocatori devono essere verificati!', 'red');
 		return;
 	}
-	
-	// Inizializza la mappa dei risultati per tutti i giocatori
-	players.forEach(player => {
-		if (!tournamentResults.has(player.id)) {
-			tournamentResults.set(player.id, [0, 0, 0]); // [totalMatches, totalWins, totalLoss]
-		}
-	});
-	
-	// Crea il torneo
-	const tournamentData: TournamentData = createTournamentBracket(players, selectedGame);
-	
-	// Nascondi il setup e mostra il bracket
-	const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
-	const tournamentBracket = windowElement.querySelector('#tournament-bracket') as HTMLElement;
-	
-	if (tournamentSetup) tournamentSetup.style.display = 'none';
-	if (tournamentBracket) tournamentBracket.style.display = 'block';
-	
-	// Inizializza il display del bracket
-	displayTournamentBracket(windowElement, tournamentData);
-	
-	// Inizializza gli event listeners per il bracket
-	initializeBracketEventListeners(windowElement, tournamentData);
+
+	// Mostra messaggio di caricamento
+	const validationMessage = windowElement.querySelector('#tournament-validation-message') as HTMLElement;
+	showValidationMessage(validationMessage, `🏆 Creando ranking basato sui match di ${selectedGame} giocati...`, 'orange');
+
+	try {
+		// Ottieni il ranking dei giocatori per il gioco specifico
+		const ranking = await getUserMatchRanking(players, selectedGame);
+		
+		// Riordina i players secondo il ranking
+		const rankedPlayers: TournamentPlayer[] = [];
+		
+		ranking.forEach(rankedUser => {
+			const player = players.find(p => p.id === rankedUser.id);
+			if (player) {
+				rankedPlayers.push(player);
+			}
+		});
+		
+		// Aggiungi eventuali giocatori mancanti (non dovrebbe succedere)
+		players.forEach(player => {
+			if (!rankedPlayers.find(p => p.id === player.id)) {
+				rankedPlayers.push(player);
+			}
+		});
+
+		console.log('🏆 Ordine finale del torneo:');
+		rankedPlayers.forEach((player, index) => {
+			const userRank = ranking.find(r => r.id === player.id);
+			console.log(`${index + 1}. ${player.display_name} (${userRank?.totalMatches || 0} partite)`);
+		});
+		
+		// Inizializza la mappa dei risultati per tutti i giocatori
+		rankedPlayers.forEach(player => {
+			if (!tournamentResults.has(player.id)) {
+				tournamentResults.set(player.id, [0, 0, 0]); // [totalMatches, totalWins, totalLoss]
+			}
+		});
+		
+		// Crea il torneo con i giocatori ordinati per ranking
+		const tournamentData: TournamentData = createTournamentBracket(rankedPlayers, selectedGame);
+		
+		// Nascondi il setup e mostra il bracket
+		const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
+		const tournamentBracket = windowElement.querySelector('#tournament-bracket') as HTMLElement;
+		
+		if (tournamentSetup) tournamentSetup.style.display = 'none';
+		if (tournamentBracket) tournamentBracket.style.display = 'block';
+		
+		// Mostra messaggio di successo
+		showValidationMessage(validationMessage, `✅ Torneo ${selectedGame} creato con ranking!`, 'green');
+		
+		// Inizializza il display del bracket
+		displayTournamentBracket(windowElement, tournamentData);
+		
+		// Inizializza gli event listeners per il bracket
+		initializeBracketEventListeners(windowElement, tournamentData);
+		
+	} catch (error) {
+		logError('Errore nella creazione del torneo con ranking:', error as any);
+		showValidationMessage(validationMessage, '❌ Errore nella creazione del ranking. Usando ordine casuale...', 'red');
+		
+		// Fallback: usa il sistema precedente (casuale)
+		const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+		
+		// Inizializza la mappa dei risultati
+		shuffledPlayers.forEach(player => {
+			if (!tournamentResults.has(player.id)) {
+				tournamentResults.set(player.id, [0, 0, 0]);
+			}
+		});
+		
+		const tournamentData: TournamentData = createTournamentBracket(shuffledPlayers, selectedGame);
+		
+		const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
+		const tournamentBracket = windowElement.querySelector('#tournament-bracket') as HTMLElement;
+		
+		if (tournamentSetup) tournamentSetup.style.display = 'none';
+		if (tournamentBracket) tournamentBracket.style.display = 'block';
+		
+		displayTournamentBracket(windowElement, tournamentData);
+		initializeBracketEventListeners(windowElement, tournamentData);
+	}
 }
 
-// Funzione per creare il bracket del torneo
+// Funzione per creare il bracket del torneo (MODIFICATA per usare il ranking)
 function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pong' | 'peow'): TournamentData {
-	// Mescola i giocatori casualmente per evitare sempre lo stesso ordine
-	const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+	console.log('🏆 Creando bracket del torneo con ranking...');
+	
+	// Non mescolare più casualmente - useremo il ranking
+	const orderedPlayers = [...players];
 	
 	const matches: TournamentMatch[] = [];
 	
-	// Crea i match del primo round (quarti di finale)
+	// Crea i match del primo round basati sul ranking
+	// 1° vs 2°, 3° vs 4°, 5° vs 6°, 7° vs 8°
 	for (let i = 0; i < 8; i += 2) {
+		const player1 = orderedPlayers[i];
+		const player2 = orderedPlayers[i + 1];
+		
+		console.log(`🥊 Match ${Math.floor(i / 2) + 1}: ${player1.display_name} (${i + 1}°) vs ${player2.display_name} (${i + 2}°)`);
+		
 		matches.push({
-			player1: shuffledPlayers[i],
-			player2: shuffledPlayers[i + 1],
+			player1: player1,
+			player2: player2,
 			round: 1,
 			matchIndex: Math.floor(i / 2)
 		});
@@ -566,7 +637,7 @@ function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pon
 	
 	return {
 		game_name: selectedGame,
-		players: shuffledPlayers,
+		players: orderedPlayers,
 		matches,
 		currentRound: 1,
 		currentMatchIndex: 0
@@ -845,6 +916,139 @@ function updateTournamentResults(playerId: number, won: boolean) {
 		currentStats[2] + (won ? 0 : 1)  // totalLoss
 	];
 	tournamentResults.set(playerId, newStats);
+}
+
+// Funzione per ottenere la classifica utenti per numero di partite
+async function getUserMatchRanking(players: TournamentPlayer[], gameName: 'pong' | 'peow'): Promise<Array<{
+	id: number,
+	username: string,
+	display_name: string,
+	totalMatches: number,
+	wins: number,
+	losses: number
+}>> {
+	try {
+		console.log(`🏆 Caricando classifica utenti per torneo ${gameName}...`, players.map(p => `${p.display_name} (${p.id})`));
+
+		// Mappa per contare le statistiche di ogni utente
+		const userStats = new Map<number, {
+			id: number,
+			username: string,
+			display_name: string,
+			totalMatches: number,
+			wins: number,
+			losses: number
+		}>();
+
+		// Inizializza tutti gli utenti con 0 match usando i dati già disponibili
+		players.forEach(player => {
+			console.log(`✅ Inizializzando giocatore: ${player.display_name} (${player.id})`);
+			userStats.set(player.id, {
+				id: player.id,
+				username: player.username,
+				display_name: player.display_name,
+				totalMatches: 0,
+				wins: 0,
+				losses: 0
+			});
+		});
+
+		// Ottieni tutti i match dal database
+		const response = await fetch('/api/matches/allMatches');
+		
+		if (!response.ok) {
+			logError('Errore nel caricamento dei match per la classifica');
+			return Array.from(userStats.values());
+		}
+
+		const matches = await response.json();
+		console.log('📊 Match totali caricati:', matches.length);
+		console.log('📋 Primi 3 match dal database:', matches.slice(0, 3));
+
+		// Filtra i match per il gioco specifico
+		const gameMatches = matches.filter((match: any) => {
+			console.log(`🔍 Match: game_name="${match.game_name}", cercando "${gameName}"`);
+			return match.game_name === gameName;
+		});
+		console.log(`📊 Match di ${gameName} trovati:`, gameMatches.length);
+		console.log('📋 Match filtrati:', gameMatches);
+
+		// Conta le statistiche per ogni match che coinvolge i nostri utenti (solo per il gioco specifico)
+		for (const match of gameMatches) {
+			const player1Id = match.player1_id;
+			const player2Id = match.player2_id;
+			const winnerId = match.winner_id;
+			
+			console.log(`🥊 Processing match: P1=${player1Id}, P2=${player2Id}, Winner=${winnerId}`);
+
+			// Aggiorna statistiche solo per gli utenti del torneo e solo per partite del gioco specifico
+			if (userStats.has(player1Id)) {
+				const player1Stats = userStats.get(player1Id)!;
+				player1Stats.totalMatches++;
+				if (winnerId === player1Id) {
+					player1Stats.wins++;
+				} else {
+					player1Stats.losses++;
+				}
+				console.log(`📊 P1 ${player1Id} stats: ${player1Stats.totalMatches}M, ${player1Stats.wins}W, ${player1Stats.losses}L`);
+			}
+
+			if (userStats.has(player2Id)) {
+				const player2Stats = userStats.get(player2Id)!;
+				player2Stats.totalMatches++;
+				if (winnerId === player2Id) {
+					player2Stats.wins++;
+				} else {
+					player2Stats.losses++;
+				}
+				console.log(`📊 P2 ${player2Id} stats: ${player2Stats.totalMatches}M, ${player2Stats.wins}W, ${player2Stats.losses}L`);
+			}
+		}
+
+		// Converti la mappa in array
+		const userArray = Array.from(userStats.values());
+		console.log('👥 Statistiche finali utenti prima del sorting:', userArray);
+
+		// Raggruppa utenti per numero di partite
+		const groupedByMatches = new Map<number, typeof userArray>();
+		
+		userArray.forEach(user => {
+			const matchCount = user.totalMatches;
+			if (!groupedByMatches.has(matchCount)) {
+				groupedByMatches.set(matchCount, []);
+			}
+			groupedByMatches.get(matchCount)!.push(user);
+		});
+
+		console.log('📊 Gruppi per numero di partite:', Object.fromEntries(groupedByMatches));
+
+		// Ordina i gruppi per numero di partite (decrescente) e randomizza dentro ogni gruppo
+		const sortedUsers: typeof userArray = [];
+		
+		// Ottieni tutte le chiavi (numero di partite) e ordinale in modo decrescente
+		const matchCounts = Array.from(groupedByMatches.keys()).sort((a, b) => b - a);
+		
+		matchCounts.forEach(matchCount => {
+			const usersWithSameMatches = groupedByMatches.get(matchCount)!;
+			
+			// Randomizza l'ordine degli utenti con lo stesso numero di partite
+			const shuffledUsers = usersWithSameMatches.sort(() => Math.random() - 0.5);
+			
+			// Aggiungi al risultato finale
+			sortedUsers.push(...shuffledUsers);
+		});
+
+		console.log(`🏆 Classifica torneo ${gameName} generata:`);
+		sortedUsers.forEach((user, index) => {
+			console.log(`${index + 1}. ${user.display_name}: ${user.totalMatches} partite ${gameName} (${user.wins}W-${user.losses}L)`);
+		});
+
+		return sortedUsers;
+
+	} catch (error) {
+		logError('Errore nel calcolo della classifica utenti:', error as any);
+		return [];
+	}
 }
 
 // Funzione helper per mostrare messaggi di validazione
