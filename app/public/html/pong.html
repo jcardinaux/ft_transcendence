@@ -4,13 +4,8 @@
         <h2 style="color: #333; margin-bottom: 20px;">🎮 Scegli il gioco</h2>
         
         <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-            <button id="pong-game-btn" style="
+            <button id="pong-game-btn" class="btn-win98" style="
                 padding: 20px 30px; 
-                background: #4CAF50; 
-                color: white; 
-                border: none; 
-                border-radius: 10px; 
-                cursor: pointer;
                 font-size: 18px;
                 min-width: 150px;
                 font-weight: bold;
@@ -18,13 +13,8 @@
                 🏓 PONG
             </button>
             
-            <button id="peow-game-btn" style="
+            <button id="peow-game-btn" class="btn-win98" style="
                 padding: 20px 30px; 
-                background: #9C27B0; 
-                color: white; 
-                border: none; 
-                border-radius: 10px; 
-                cursor: pointer;
                 font-size: 18px;
                 min-width: 150px;
                 font-weight: bold;
@@ -39,39 +29,24 @@
         <h2 id="game-mode-title" style="color: #333; margin-bottom: 20px;">🏓 Scegli la modalità di gioco</h2>
         
         <div style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-            <button id="vs-cpu-btn" style="
+            <button id="vs-cpu-btn" class="btn-win98" style="
                 padding: 15px 25px; 
-                background: #4CAF50; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 16px;
                 min-width: 130px;
             ">
                 🤖 Practice vs CPU
             </button>
             
-            <button id="vs-player-btn" style="
+            <button id="vs-player-btn" class="btn-win98" style="
                 padding: 15px 25px; 
-                background: #2196F3; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 16px;
                 min-width: 130px;
             ">
                 👥 1 vs 1
             </button>
 
-            <button id="tournament-btn" style="
+            <button id="tournament-btn" class="btn-win98" style="
                 padding: 15px 25px; 
-                background: #FF9800; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 16px;
                 min-width: 130px;
             ">
@@ -80,13 +55,8 @@
         </div>
         
         <div style="margin-top: 15px;">
-            <button id="back-to-game-selection-btn" style="
+            <button id="back-to-game-selection-btn" class="btn-win98" style="
                 padding: 10px 20px; 
-                background: #6c757d; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 14px;
             ">
                 ← Torna alla selezione giochi
@@ -107,23 +77,13 @@
             ">
         </div>
         <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="start-pvp-btn" style="
-                padding: 10px 20px; 
-                background: #4CAF50; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
+            <button id="start-pvp-btn" class="btn-win98" style="
+                padding: 10px 20px;
             ">
                 Inizia Partita
             </button>
-            <button id="back-to-menu-btn" style="
-                padding: 10px 20px; 
-                background: #f44336; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
+            <button id="back-to-menu-btn" class="btn-win98" style="
+                padding: 10px 20px;
             ">
                 Torna Indietro
             </button>
@@ -146,67 +106,57 @@
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">2.</span>
                 <input type="text" id="player-2" placeholder="Username giocatore 2" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="2" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="2" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">3.</span>
                 <input type="text" id="player-3" placeholder="Username giocatore 3" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="3" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="3" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">4.</span>
                 <input type="text" id="player-4" placeholder="Username giocatore 4" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="4" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="4" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">5.</span>
                 <input type="text" id="player-5" placeholder="Username giocatore 5" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="5" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="5" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">6.</span>
                 <input type="text" id="player-6" placeholder="Username giocatore 6" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="6" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="6" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">7.</span>
                 <input type="text" id="player-7" placeholder="Username giocatore 7" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="7" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="7" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
 
             <div style="display: flex; align-items: center;">
                 <span style="font-weight: bold; margin-right: 10px; width: 20px;">8.</span>
                 <input type="text" id="player-8" placeholder="Username giocatore 8" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-                <button class="verify-player-btn" data-player="8" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
+                <button class="verify-player-btn btn-win98" data-player="8" style="margin-left: 5px; padding: 5px 8px; font-size: 12px;">✓</button>
             </div>
         </div>
 
         <div id="tournament-validation-message" style="margin: 20px 0; text-align: center; font-weight: bold;"></div>
 
         <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
-            <button id="start-tournament-btn" style="
+            <button id="start-tournament-btn" class="btn-win98" style="
                 padding: 12px 25px; 
-                background: #FF9800; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 16px;
             " disabled>
                 🏆 Inizia Torneo
             </button>
-            <button id="back-to-menu-tournament-btn" style="
-                padding: 12px 25px; 
-                background: #f44336; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
+            <button id="back-to-menu-tournament-btn" class="btn-win98" style="
+                padding: 12px 25px;
             ">
                 Torna al Menu
             </button>
@@ -219,13 +169,8 @@
         <div id="bracket-display" style="text-align: center; margin-bottom: 20px;"></div>
         <div id="current-match-info" style="text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px;"></div>
         <div style="text-align: center;">
-            <button id="start-current-match-btn" style="
+            <button id="start-current-match-btn" class="btn-win98" style="
                 padding: 15px 30px; 
-                background: #4CAF50; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer;
                 font-size: 16px;
             ">
                 Inizia Match

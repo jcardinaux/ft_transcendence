@@ -1147,6 +1147,23 @@ body {
   /* Si scurisce leggermente */
 }
 
+/* Classe per il bottone attivo/selezionato */
+
+.btn-win98.active-game {
+  /* Usa i bordi "premuti" di Windows 98 */
+  --tw-bg-opacity: 1;
+  background-color: rgb(128 128 128 / var(--tw-bg-opacity, 1));
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  border-top-color: rgb(128 128 128 / var(--tw-border-opacity, 1));
+  border-left-color: rgb(128 128 128 / var(--tw-border-opacity, 1));
+  border-right-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+  --tw-border-opacity: 1;
+  border-bottom-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+}
+
 /* Effetto ACTIVE/CLICK sul thumb (quando viene premuto) */
 
 ::-webkit-scrollbar-thumb:active {

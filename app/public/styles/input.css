@@ -130,6 +130,12 @@ body {
   background-color: theme('colors.win98-gray-medium'); /* Si scurisce leggermente */
 }
 
+/* Classe per il bottone attivo/selezionato */
+.btn-win98.active-game {
+  /* Usa i bordi "premuti" di Windows 98 */
+  @apply win98-border-dark bg-win98-gray-medium;
+}
+
 /* Effetto ACTIVE/CLICK sul thumb (quando viene premuto) */
 ::-webkit-scrollbar-thumb:active {
   background-color: theme('colors.win98-gray-dark'); /* Diventa ancora più scuro */

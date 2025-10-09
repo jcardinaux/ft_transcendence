@@ -86,11 +86,17 @@ function initializeGameSelection(windowElement: HTMLElement, currentUser: any) {
 
 	// Pulsante per pong
 	pongGameBtn.addEventListener('click', () => {
+		// Gestione classi attive per evidenziare la selezione
+		pongGameBtn.classList.add('active-game');
+		peowGameBtn.classList.remove('active-game');
 		initializeGameModeSelection(windowElement, currentUser, 'pong');
 	});
 
 	// Pulsante per peow
 	peowGameBtn.addEventListener('click', () => {
+		// Gestione classi attive per evidenziare la selezione
+		peowGameBtn.classList.add('active-game');
+		pongGameBtn.classList.remove('active-game');
 		initializeGameModeSelection(windowElement, currentUser, 'peow');
 	});
 }
@@ -165,6 +171,13 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 	backToGameSelectionBtn?.addEventListener('click', () => {
 		modeSelection.style.display = 'none';
 		gameSelection.style.display = 'block';
+		
+		// Ripristina stato bottoni gioco (rimuove selezione attiva)
+		const pongGameBtn = windowElement.querySelector('#pong-game-btn') as HTMLButtonElement;
+		const peowGameBtn = windowElement.querySelector('#peow-game-btn') as HTMLButtonElement;
+		pongGameBtn?.classList.remove('active-game');
+		peowGameBtn?.classList.remove('active-game');
+		
 		if (validationMessage) validationMessage.textContent = '';
 		if (opponentInput) opponentInput.value = '';
 	});
@@ -1079,6 +1092,12 @@ function backToMainMenu(windowElement: HTMLElement) {
 	// Mostra la selezione del gioco (menu principale)
 	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
 	if (gameSelection) gameSelection.style.display = 'block';
+	
+	// Ripristina stato bottoni gioco (rimuove selezione attiva)
+	const pongGameBtn = windowElement.querySelector('#pong-game-btn') as HTMLButtonElement;
+	const peowGameBtn = windowElement.querySelector('#peow-game-btn') as HTMLButtonElement;
+	pongGameBtn?.classList.remove('active-game');
+	peowGameBtn?.classList.remove('active-game');
 	
 	// Reset di tutti i campi del torneo
 	resetTournamentSetup(windowElement);
