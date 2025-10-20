@@ -20,7 +20,7 @@ services:
       cert-generator:
         condition: service_completed_successfully
     volumes:
-      - ./app/logs:/app/logs
+      - app-logs:/app/logs
       - shared-certs:/shared-certs:ro
     env_file: ./app/.env
     ports:
@@ -34,7 +34,9 @@ services:
       retries: 5
       start_period: 25s
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    # 1. MODIFICA: Usa 'build' per creare un'immagine locale, invece di 'image'
+    build:
+      context: ./elk/elasticsearch
     container_name: elk-elasticsearch
     depends_on:
       cert-generator:
@@ -45,7 +47,7 @@ services:
       - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
-      - bootstrap.memory_lock=true
+      - bootstrap.memory_lock=false
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
       - xpack.security.http.ssl.key=/usr/share/elasticsearch/config/certs/elasticsearch-key.pem
@@ -56,16 +58,16 @@ services:
       - xpack.security.transport.ssl.certificate=/usr/share/elasticsearch/config/certs/elasticsearch-cert.pem
       - xpack.security.transport.ssl.certificate_authorities=/usr/share/elasticsearch/config/certs/ca-cert.pem
       - xpack.license.self_generated.type=basic
+      - cluster.routing.allocation.disk.watermark.low=85%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - cluster.routing.allocation.disk.watermark.flood_stage=95%
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
       - path.repo=/usr/share/elasticsearch/archives
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
       - elasticsearch-archives:/usr/share/elasticsearch/archives
-      - ./elk/elasticsearch/scripts:/scripts
+      # 2. MODIFICA: Rimuovi questa riga per non montare più gli script
+      # - ./elk/elasticsearch/scripts:/scripts
       - shared-certs:/shared-certs:ro
     ports:
       - "9200:9200"
@@ -76,11 +78,15 @@ services:
       interval: 10s
       timeout: 10s
       retries: 30
-    entrypoint: ["/bin/bash", "-c", "/scripts/entrypoint-es.sh"]
+      start_period: 60s
+    # 3. MODIFICA: Riporta l'entrypoint alla sua forma originale e semplice
+    entrypoint: ["/scripts/entrypoint-es.sh"]
     restart: unless-stopped
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.0
+    # Sostituisci 'image:' con 'build:'
+    build:
+      context: ./elk/kibana
     container_name: elk-kibana
     depends_on:
       cert-generator:
@@ -99,7 +105,8 @@ services:
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KIBANA_ENCRYPTION_KEY}
     volumes:
       - kibana-data:/usr/share/kibana/data
-      - ./elk/kibana/scripts:/scripts
+      # RIMUOVI QUESTA RIGA
+      # - ./elk/kibana/scripts:/scripts
       - shared-certs:/shared-certs:ro
     ports:
       - "5601:5601"
@@ -114,7 +121,7 @@ services:
     entrypoint: ["/scripts/init-kibana.sh"]
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.15.0
+    build: docker.elastic.co/logstash/logstash:8.15.0
     container_name: elk-logstash
     entrypoint: ["/scripts/entrypoint-ls.sh"]
     depends_on:
@@ -127,8 +134,9 @@ services:
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
       - ./elk/logstash/config:/usr/share/logstash/config
-      - ./elk/logstash/scripts:/scripts
-      - ./app/logs:/logs
+     # - ./elk/logstash/scripts:/scripts
+
+      - app-logs:/logs
       - logstash-data:/usr/share/logstash/data
       - shared-certs:/shared-certs:ro
     environment:
@@ -150,3 +158,4 @@ volumes:
   elasticsearch-archives:
   kibana-data:
   logstash-data:
+  app-logs:
