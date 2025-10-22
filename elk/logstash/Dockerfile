@@ -6,11 +6,8 @@ USER root
 # Crea esplicitamente la cartella di destinazione
 RUN mkdir -p /scripts
 
-# Copia i singoli file necessari
-COPY ./scripts/entrypoint-ls.sh /scripts/entrypoint-ls.sh
-
-# Rendi lo script eseguibile
-RUN chmod +x /scripts/entrypoint-ls.sh
+# Copia i singoli file necessari con permessi di esecuzione
+COPY --chmod=755 ./scripts/entrypoint-ls.sh /scripts/entrypoint-ls.sh
 
 # Lasciare il container a root; se vuoi eseguire come utente non-root,
 # puoi aggiungere `USER logstash` qui se l'utente esiste nell'immagine base.

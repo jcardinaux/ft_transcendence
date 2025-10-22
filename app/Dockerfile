@@ -25,13 +25,13 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/database ./database
 
-# Copy Docker utilities
-COPY app/docker-utils/get-certs.sh /app/docker-utils/get-certs.sh
-RUN chmod +x /app/docker-utils/get-certs.sh
+# Copy Docker utilities with execution permissions
+COPY --chmod=755 app/docker-utils/get-certs.sh /app/docker-utils/get-certs.sh
 
-RUN mkdir -p /app/logs && touch /app/logs/server.log /app/logs/client.log
-RUN chown -R appuser:appuser /app
-RUN chmod 644 /app/logs/*.log
+RUN mkdir -p /app/logs && \
+    touch /app/logs/server.log /app/logs/client.log && \
+    chmod 644 /app/logs/*.log && \
+    chown -R appuser:appuser /app
 
 USER appuser
 
