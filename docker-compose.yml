@@ -121,7 +121,9 @@ services:
     entrypoint: ["/scripts/init-kibana.sh"]
 
   logstash:
-    build: docker.elastic.co/logstash/logstash:8.15.0
+    build:
+      context: ./elk/logstash
+    # Build from local Dockerfile so entrypoint script is baked into image (avoids NFS noexec issues)
     container_name: elk-logstash
     entrypoint: ["/scripts/entrypoint-ls.sh"]
     depends_on:
@@ -134,8 +136,6 @@ services:
     volumes:
       - ./elk/logstash/pipeline:/usr/share/logstash/pipeline
       - ./elk/logstash/config:/usr/share/logstash/config
-     # - ./elk/logstash/scripts:/scripts
-
       - app-logs:/logs
       - logstash-data:/usr/share/logstash/data
       - shared-certs:/shared-certs:ro

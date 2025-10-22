@@ -1,5 +1,8 @@
 FROM docker.elastic.co/logstash/logstash:8.15.0
 
+# Esegui i comandi di build come root (l'immagine base può cambiare utente)
+USER root
+
 # Crea esplicitamente la cartella di destinazione
 RUN mkdir -p /scripts
 
@@ -8,3 +11,6 @@ COPY ./scripts/entrypoint-ls.sh /scripts/entrypoint-ls.sh
 
 # Rendi lo script eseguibile
 RUN chmod +x /scripts/entrypoint-ls.sh
+
+# Lasciare il container a root; se vuoi eseguire come utente non-root,
+# puoi aggiungere `USER logstash` qui se l'utente esiste nell'immagine base.
