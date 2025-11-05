@@ -107,9 +107,9 @@ export async function renderWelcomePage() {
             body: JSON.stringify({username, email, password, display_name})
           });
           if (response.status === 201){
-            //logica per fare subito il login
-            //per ora mandiamo a /
-            window.location.href = '/desktop';
+            // registrazione avvenuta: non reindirizzare a desktop, richiedere login esplicito
+            try { localStorage.removeItem('token'); } catch {}
+            alert('Registration successful. Please log in to continue.');
           } 
           else {
             const error = await response.json();
