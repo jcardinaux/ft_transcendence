@@ -23,7 +23,7 @@ db.exec(`
   );
   CREATE TABLE IF NOT EXISTS matches (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  player1_id INTEGER NOT NULL,
+  player1_id INTEGER,
   player2_id INTEGER,
   winner_id INTEGER,
   score TEXT,

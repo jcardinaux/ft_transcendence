@@ -321,9 +321,12 @@ function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any,
 	modeSelection.style.display = 'none';
 	tournamentSetup.style.display = 'block';
 	
-	// Mostra l'utente corrente
+	// Mostra l'utente corrente (con indicatore se non registrato)
 	if (currentUserDisplay) {
-		currentUserDisplay.textContent = `Tu (${currentUser.display_name || currentUser.username})`;
+		const userLabel = currentUser.id === 0 
+			? `Tu (${currentUser.display_name || currentUser.username}) 👤`
+			: `Tu (${currentUser.display_name || currentUser.username})`;
+		currentUserDisplay.textContent = userLabel;
 	}
 	
 	// Inizializza gli event listeners per il setup del torneo
@@ -447,10 +450,26 @@ async function verifyTournamentPlayer(windowElement: HTMLElement, playerNum: str
 			checkAllPlayersVerified(windowElement);
 			
 		} else if (response.status === 404) {
-			// Reset del pulsante se utente non trovato
-			verifyButton.disabled = false;
-			verifyButton.textContent = '✓';
-			showValidationMessage(validationMessage, `❌ Giocatore "${username}" non trovato!`, 'red');
+			// Utente non registrato: accetta come alias con id=0
+			console.log(`👤 Utente non registrato "${username}" - usando come alias`);
+			
+			// Marca come verificato (utente non registrato)
+			verifyButton.textContent = '👤';
+			verifyButton.style.background = '#FF9800';
+			verifyButton.style.color = 'white';
+			playerInput.style.borderColor = '#FF9800';
+			playerInput.style.background = '#fff3e0';
+			playerInput.disabled = true;
+			
+			// Salva i dati del giocatore non registrato (id=0)
+			verifyButton.setAttribute('data-user-id', '0');
+			verifyButton.setAttribute('data-display-name', username);
+			
+			showValidationMessage(validationMessage, `👤 "${username}" aggiunto come giocatore non registrato`, 'orange');
+			
+			// Controlla se tutti i giocatori sono stati verificati
+			checkAllPlayersVerified(windowElement);
+			
 		} else {
 			verifyButton.disabled = false;
 			verifyButton.textContent = '✓';
@@ -480,7 +499,8 @@ function checkAllPlayersVerified(windowElement: HTMLElement) {
 	
 	verifyButtons.forEach(button => {
 		totalButtons++;
-		if (button.textContent === '✅') {
+		// Accetta sia giocatori registrati (✅) che non registrati (👤)
+		if (button.textContent === '✅' || button.textContent === '👤') {
 			verifiedCount++;
 		}
 		console.log(`Button ${button.getAttribute('data-player')}: ${button.textContent}`);
@@ -515,10 +535,10 @@ async function startTournament(windowElement: HTMLElement, currentUser: any, sel
 		verified: true
 	});
 	
-	// Aggiungi gli altri 7 giocatori
+	// Aggiungi gli altri 7 giocatori (registrati ✅ o non registrati 👤)
 	const verifyButtons = windowElement.querySelectorAll('.verify-player-btn') as NodeListOf<HTMLButtonElement>;
 	verifyButtons.forEach(button => {
-		if (button.textContent === '✅') {
+		if (button.textContent === '✅' || button.textContent === '👤') {
 			const playerNum = button.getAttribute('data-player');
 			const playerInput = windowElement.querySelector(`#player-${playerNum}`) as HTMLInputElement;
 			
@@ -680,9 +700,9 @@ function displayTournamentBracket(windowElement: HTMLElement, tournamentData: To
 			border-radius: 5px;
 			background: ${isCurrent ? '#fff3e0' : (isCompleted ? '#e8f5e8' : '#f9f9f9')};
 		">`;
-		html += `<div>${match.player1.display_name}</div>`;
+		html += `<div>${match.player1.display_name}${match.player1.id === 0 ? ' 👤' : ''}</div>`;
 		html += `<div style="text-align: center; font-weight: bold; margin: 5px 0;">VS</div>`;
-		html += `<div>${match.player2.display_name}</div>`;
+		html += `<div>${match.player2.display_name}${match.player2.id === 0 ? ' 👤' : ''}</div>`;
 		if (match.winner) {
 			html += `<div style="text-align: center; margin-top: 5px; font-weight: bold; color: green;">Vincitore: ${match.winner.display_name}</div>`;
 		}
@@ -705,9 +725,9 @@ function displayTournamentBracket(windowElement: HTMLElement, tournamentData: To
 				border-radius: 5px;
 				background: ${isCurrent ? '#fff3e0' : (isCompleted ? '#e8f5e8' : '#f9f9f9')};
 			">`;
-			html += `<div>${match.player1.display_name}</div>`;
+			html += `<div>${match.player1.display_name}${match.player1.id === 0 ? ' 👤' : ''}</div>`;
 			html += `<div style="text-align: center; font-weight: bold; margin: 5px 0;">VS</div>`;
-			html += `<div>${match.player2.display_name}</div>`;
+			html += `<div>${match.player2.display_name}${match.player2.id === 0 ? ' 👤' : ''}</div>`;
 			if (match.winner) {
 				html += `<div style="text-align: center; margin-top: 5px; font-weight: bold; color: green;">Vincitore: ${match.winner.display_name}</div>`;
 			}
@@ -733,9 +753,9 @@ function displayTournamentBracket(windowElement: HTMLElement, tournamentData: To
 			border-radius: 8px;
 			background: ${isCurrent ? '#fff3e0' : (isCompleted ? '#e8f5e8' : '#f9f9f9')};
 		">`;
-		html += `<div style="font-size: 16px; font-weight: bold;">${match.player1.display_name}</div>`;
+		html += `<div style="font-size: 16px; font-weight: bold;">${match.player1.display_name}${match.player1.id === 0 ? ' 👤' : ''}</div>`;
 		html += `<div style="text-align: center; font-weight: bold; margin: 8px 0; font-size: 18px;">VS</div>`;
-		html += `<div style="font-size: 16px; font-weight: bold;">${match.player2.display_name}</div>`;
+		html += `<div style="font-size: 16px; font-weight: bold;">${match.player2.display_name}${match.player2.id === 0 ? ' 👤' : ''}</div>`;
 		if (match.winner) {
 			html += `<div style="text-align: center; margin-top: 10px; font-weight: bold; color: gold; font-size: 18px;">🏆 CAMPIONE: ${match.winner.display_name}! 🏆</div>`;
 		}
@@ -746,20 +766,6 @@ function displayTournamentBracket(windowElement: HTMLElement, tournamentData: To
 	html += '</div>';
 	
 	html += '</div>';
-	
-	// Mostra i risultati del torneo
-	html += '<div style="margin-top: 30px;"><h4>Risultati del Torneo</h4>';
-	html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
-	html += '<tr style="background: #f0f0f0;"><th style="border: 1px solid #ddd; padding: 8px;">Giocatore</th><th style="border: 1px solid #ddd; padding: 8px;">Match Totali</th><th style="border: 1px solid #ddd; padding: 8px;">Vittorie</th><th style="border: 1px solid #ddd; padding: 8px;">Sconfitte</th></tr>';
-	
-	tournamentResults.forEach((stats, playerId) => {
-		const player = tournamentData.players.find(p => p.id === playerId);
-		if (player) {
-			html += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${player.display_name}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${stats[0]}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${stats[1]}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${stats[2]}</td></tr>`;
-		}
-	});
-	
-	html += '</table></div>';
 	
 	bracketDisplay.innerHTML = html;
 	
@@ -795,9 +801,15 @@ function updateCurrentMatchInfo(windowElement: HTMLElement, tournamentData: Tour
 	}
 	
 	const roundNames = ['', 'Quarti di Finale', 'Semifinali', 'Finale'];
+	const p1Label = currentMatch.player1.id === 0 
+		? `${currentMatch.player1.display_name} 👤` 
+		: currentMatch.player1.display_name;
+	const p2Label = currentMatch.player2.id === 0 
+		? `${currentMatch.player2.display_name} 👤` 
+		: currentMatch.player2.display_name;
 	currentMatchInfo.innerHTML = `
 		<span style="color: #FF9800;">${roundNames[tournamentData.currentRound]} - Match ${tournamentData.currentMatchIndex + 1}</span><br>
-		<strong>${currentMatch.player1.display_name}</strong> vs <strong>${currentMatch.player2.display_name}</strong>
+		<strong>${p1Label}</strong> vs <strong>${p2Label}</strong>
 	`;
 }
 
@@ -954,8 +966,13 @@ async function getUserMatchRanking(players: TournamentPlayer[], gameName: 'pong'
 		}>();
 
 		// Inizializza tutti gli utenti con 0 match usando i dati già disponibili
+		// Gli utenti non registrati (id=0) vengono inizializzati ma non avranno match dal DB
 		players.forEach(player => {
-			console.log(`✅ Inizializzando giocatore: ${player.display_name} (${player.id})`);
+			if (player.id === 0) {
+				console.log(`👤 Inizializzando giocatore NON REGISTRATO: ${player.display_name} (id=0)`);
+			} else {
+				console.log(`✅ Inizializzando giocatore: ${player.display_name} (${player.id})`);
+			}
 			userStats.set(player.id, {
 				id: player.id,
 				username: player.username,
@@ -987,10 +1004,16 @@ async function getUserMatchRanking(players: TournamentPlayer[], gameName: 'pong'
 		console.log('📋 Match filtrati:', gameMatches);
 
 		// Conta le statistiche per ogni match che coinvolge i nostri utenti (solo per il gioco specifico)
+		// Nota: gli utenti non registrati (id=0) non avranno match nel database
 		for (const match of gameMatches) {
 			const player1Id = match.player1_id;
 			const player2Id = match.player2_id;
 			const winnerId = match.winner_id;
+			
+			// Salta match che coinvolgono utenti non registrati (id=0)
+			if (player1Id === 0 || player2Id === 0) {
+				continue;
+			}
 			
 			console.log(`🥊 Processing match: P1=${player1Id}, P2=${player2Id}, Winner=${winnerId}`);
 
@@ -1155,6 +1178,13 @@ async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightS
 	if (!gameMode.player1 || !gameMode.player2) {
 		console.log('❌ Dati giocatori mancanti');
 		logError('Cannot save match: missing player data');
+		return;
+	}
+
+	// Non salvare match se ENTRAMBI i giocatori sono non registrati (id=0)
+	// Se solo uno è non registrato, salviamo comunque per aggiornare le statistiche del giocatore registrato
+	if (gameMode.player1.id === 0 && gameMode.player2.id === 0) {
+		console.log('👤 Match tra due utenti non registrati - non salvato nel database');
 		return;
 	}
 
@@ -1698,7 +1728,7 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		public originalHeight: number = 120;
 		public currentHeight: number = 120;
 		public width: number = 20;
-		public speed: number = 12;
+		public speed: number = 15;
 		public hitCount: number = 0;
 
 		constructor(x: number, y: number) {
@@ -1793,55 +1823,44 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	let rightPaddle = new peowPaddle(canvas.width - 50, canvas.height / 2 - 60);
 	let bullets: Bullet[] = [];
 
-	// Input state
-	let leftUpPressed = false;
-	let leftDownPressed = false;
-	let leftShootPressed = false;
-	let rightUpPressed = false;
-	let rightDownPressed = false;
-	let rightShootPressed = false;
+	// Input state (allineato a pong)
+	let upPressed = false;
+	let downPressed = false;
+	let wPressed = false;
+	let sPressed = false;
 
 	// Cooldown per i proiettili (per evitare spam)
 	let leftShootCooldown = 0;
 	let rightShootCooldown = 0;
 	const shootCooldownTime = 10// frames
 
-	// Event listeners
+	// Event listeners (allineato a pong)
 	const keydownHandler = (e: KeyboardEvent) => {
-		switch(e.key.toLowerCase()) {
-			case 'w': leftUpPressed = true; break;
-			case 's': leftDownPressed = true; break;
-			case 'd': 
-				if (!leftShootPressed && leftShootCooldown <= 0) {
-					leftShootPressed = true;
-					shootBullet(leftPaddle, 1);
-					leftShootCooldown = shootCooldownTime;
-				}
-				break;
-			case 'arrowup': rightUpPressed = true; break;
-			case 'arrowdown': rightDownPressed = true; break;
-			case 'arrowleft':
-				if (!rightShootPressed && rightShootCooldown <= 0) {
-					rightShootPressed = true;
-					shootBullet(rightPaddle, -1);
-					rightShootCooldown = shootCooldownTime;
-				}
-				break;
-			case 'r':
-				if (!gameRunning) restartGame();
-				break;
+		if (e.key === 'ArrowUp') upPressed = true;
+		if (e.key === 'ArrowDown') downPressed = true;
+		if (e.key === 'w') wPressed = true;
+		if (e.key === 's') sPressed = true;
+		// Sparo per giocatore sinistro (D)
+		if (e.key === 'd' && leftShootCooldown <= 0) {
+			shootBullet(leftPaddle, 1);
+			leftShootCooldown = shootCooldownTime;
+		}
+		// Sparo per giocatore destro (ArrowLeft)
+		if (e.key === 'ArrowLeft' && rightShootCooldown <= 0) {
+			shootBullet(rightPaddle, -1);
+			rightShootCooldown = shootCooldownTime;
+		}
+		// Riavvia il gioco con R quando è finito
+		if ((e.key === 'r' || e.key === 'R') && !gameRunning) {
+			restartGame();
 		}
 	};
 
 	const keyupHandler = (e: KeyboardEvent) => {
-		switch(e.key.toLowerCase()) {
-			case 'w': leftUpPressed = false; break;
-			case 's': leftDownPressed = false; break;
-			case 'd': leftShootPressed = false; break;
-			case 'arrowup': rightUpPressed = false; break;
-			case 'arrowdown': rightDownPressed = false; break;
-			case 'arrowleft': rightShootPressed = false; break;
-		}
+		if (e.key === 'ArrowUp') upPressed = false;
+		if (e.key === 'ArrowDown') downPressed = false;
+		if (e.key === 'w') wPressed = false;
+		if (e.key === 's') sPressed = false;
 	};
 
 	document.addEventListener('keydown', keydownHandler);
@@ -1852,14 +1871,9 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		bullets.push(new Bullet(center.x, center.y, direction));
 	}
 
-	function updatePaddles() {
-		// Left paddle (W/S)
-		if (leftUpPressed) leftPaddle.move(-leftPaddle.speed);
-		if (leftDownPressed) leftPaddle.move(leftPaddle.speed);
-
-		// Right paddle (Up/Down) - AI o giocatore
+	function updateAI() {
+		// AI per il paddle destro (solo se abilitata)
 		if (isAIEnabled && gameRunning) {
-			// AI semplice per il paddle destro
 			const paddleCenter = rightPaddle.y + rightPaddle.currentHeight / 2;
 			const targetY = leftPaddle.y + leftPaddle.currentHeight / 2;
 			
@@ -1874,10 +1888,6 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 				shootBullet(rightPaddle, -1);
 				rightShootCooldown = shootCooldownTime;
 			}
-		} else {
-			// Controllo umano
-			if (rightUpPressed) rightPaddle.move(-rightPaddle.speed);
-			if (rightDownPressed) rightPaddle.move(rightPaddle.speed);
 		}
 	}
 
@@ -2032,13 +2042,11 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		leftShootCooldown = 0;
 		rightShootCooldown = 0;
 		
-		// Reset input
-		leftUpPressed = false;
-		leftDownPressed = false;
-		leftShootPressed = false;
-		rightUpPressed = false;
-		rightDownPressed = false;
-		rightShootPressed = false;
+		// Reset input (allineato a pong)
+		upPressed = false;
+		downPressed = false;
+		wPressed = false;
+		sPressed = false;
 		
 		// Reset paddles
 		leftPaddle = new peowPaddle(30, canvas.height / 2 - 60);
@@ -2047,7 +2055,16 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 
 	function gameLoop() {
 		if (gameRunning) {
-			updatePaddles();
+			// Movimento paddle (allineato a pong)
+			if (wPressed) leftPaddle.move(-leftPaddle.speed);
+			if (sPressed) leftPaddle.move(leftPaddle.speed);
+			if (upPressed) rightPaddle.move(-rightPaddle.speed);
+			if (downPressed) rightPaddle.move(rightPaddle.speed);
+			
+			// Aggiorna AI se abilitata
+			updateAI();
+			
+			// Aggiorna proiettili
 			updateBullets();
 		}
 		
