@@ -7,8 +7,9 @@ import {showAllUseriInfo,
 		uploadAvatar,
 		addFriend,
 		deleteFriend,
-		getFriends,} from "../controllers/profile.js"
-import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema } from "./utils.js"
+		getFriends,
+		getUserStats,} from "../controllers/profile.js"
+import { CompleteUserSchema, MessageSchema, FriendSchema, MatchSchema, StatsSchema } from "./utils.js"
 
 export const UsernameOpts = {
 	schema:{
@@ -174,5 +175,17 @@ export const getFriendsOpts = {
 	},
 	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
 	handler: getFriends
+}
+
+export const statsOpts = {
+	schema: {
+		tags: ['Profile'],
+		security: [{ bearerAuth: [] }],
+		response: {
+			200: StatsSchema
+		}
+	},
+	preHandler: (req, reply) => req.server.verifyJWT(req, reply),
+	handler: getUserStats
 }
 

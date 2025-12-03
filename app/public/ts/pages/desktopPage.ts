@@ -4,6 +4,7 @@ import {showUserApllication} from "../components/showUsersProgram.js"
 import { Application2FA } from "../components/2faProgram.js";
 import { statsProgram } from "../components/statsProgram.js";
 import { pong } from "../components/pong.js";
+import { startPresenceSocket } from "../utils/presenceSocket.js";
 
 export async function renderDesktopPage() {
 	const app = document.getElementById('app')
@@ -19,6 +20,17 @@ export async function renderDesktopPage() {
 		const res = await fetch('/html/desktopPage.html');
 		const htmlPage = await res.text();
 		app.innerHTML = htmlPage;
+		let stopPresenceSocket: (() => void) | null = null;
+		const logoutBtn = document.querySelector('#logout-icon button');
+		logoutBtn?.addEventListener('click', () => {
+			stopPresenceSocket?.();
+			try {
+				localStorage.removeItem('token');
+			} catch (err){
+				logError('Error clearing auth token', err as any);
+			}
+			window.location.href = '/welcome';
+		});
 		logInfo ('desktopt page loaded');
 		const response = await fetch('/api/profile/allUserInfo', {
 			method: 'GET',
@@ -32,6 +44,8 @@ export async function renderDesktopPage() {
 			window.location.href = '/welcome';
 		}
 		const userInfo = await response.json();
+		stopPresenceSocket = startPresenceSocket(token);
+		window.addEventListener('beforeunload', () => stopPresenceSocket?.(), { once: true });
 		logInfo('Dati utente:', userInfo);
 		userApplication(userInfo, app);
 		showUserApllication(userInfo, app);

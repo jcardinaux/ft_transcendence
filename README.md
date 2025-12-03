@@ -25,45 +25,26 @@ make        # Initialize and start all services
 
 ## Implementation Status
 
-**Completed Major Modules (3/7 required)**:
-- **Backend Framework**: ✅ Fastify + Node.js with HTTPS, JWT middleware, WebSocket support
-- **Infrastructure Setup for Log Management**: ✅ Complete ELK Stack (Elasticsearch, Kibana, Logstash)
-- **Two-Factor Authentication and JWT**: ✅ Backend implementation with TOTP, QR codes, authenticator integration
+### Completed Major Modules (6/6)
+- **Backend Framework**: Fastify + Node.js con HTTPS, Swagger, WebSocket e middleware JWT (`app/src/server.js`).
+- **Standard User Management**: Registrazione/login, gestione profilo (avatar, username, display name **e cambio password direttamente dalla UI**), lista amici con presenza realtime via WebSocket, cronologia tornei e logout desktop (`controllers/auth.js`, `controllers/profile.js`, `public/ts/components/userProgram.ts`, `public/ts/pages/desktopPage.ts`).
+- **Two-Factor Authentication e JWT**: TOTP con `otplib`, QR code, verifica OTP prima dell’attivazione.
+- **AI Opponent**: logica CPU in `public/ts/components/pong.ts` con refresh ogni 1s e input simulato.
+- **Second Game (“peow”)**: sistema di matchmaking condiviso, salvataggio partite e dashboard statistiche.
+- **ELK Stack**: Elasticsearch, Logstash, Kibana con certificati dedicati, ILM policy e test automatici (`elk/tests/`).
 
-**Completed Minor Modules (2 count as +1 Major)**:
-- **Database Backend**: ✅ SQLite with user management, authentication, and match history schemas
-- **Frontend Framework**: ✅ TypeScript + Tailwind CSS build system and SPA architecture
+### Completed Minor Modules (2/2)
+- **Database Backend**: SQLite (`app/database/db.js`) con tabelle utenti, amici, match e prepared statement in tutti i controller.
+- **Frontend Toolkit**: SPA Win98 in TypeScript + Tailwind, pipeline `watch-css`/`watch-ts` e build Docker.
 
-**Current Status: 4/7 Major modules complete** *(3 Major + 1 from 2 Minor)*
+**Totale**: 6 moduli major + 2 minor (equivalenti a 1 major aggiuntivo) → requisito dei 7 major soddisfatto.
 
-## Critical Missing Components
+## Runtime & Verification Checklist
 
-**❌ CORE GAME (0% Complete)**:
-- Pong game mechanics and physics
-- Tournament system with user registration and matchmaking
-- Game interface with canvas/WebGL graphics
-- Score tracking and game history
-
-**❌ Frontend Implementation (Placeholder pages only)**:
-- User authentication forms
-- Profile management interface
-- Tournament registration and management
-- Game interface and controls
-
-**❌ Major Modules Required (3 more needed for completion)**:
-Choose 3 from:
-- **Remote Players**: WebSocket infrastructure exists, need multiplayer game logic
-- **Live Chat**: WebSocket infrastructure exists, need chat implementation
-- **AI Opponent**: Need game AI and opponent logic
-- **Server-Side Pong**: Replace basic Pong with server-side implementation + API
-- **Standard User Management**: Need tournament user management across tournaments
-- **Remote Authentication**: OAuth/external auth integration
-- **Multiplayer**: Support for >2 players in same game
-- **Add Another Game**: Second game with history and matchmaking
-- **Blockchain Tournament Scores**: Store tournament results on blockchain
-- **Advanced 3D Techniques**: 3D graphics implementation
-- **WAF/ModSecurity + HashiCorp Vault**: Advanced security implementation
-- **Backend as Microservices**: Microservice architecture redesign
+- `make up` → avvio completo stack (app + ELK). Se fallisce, eseguire `docker compose down` e riprovare dopo `docker volume prune` mirato.
+- `./elk/tests/elk-validation.sh` → convalida automatica dell’infrastruttura log con auto-fix per repository snapshot/alias ILM.
+- QA manuale SPA: build frontend (`npm run build`) e verifica pagine (login, desktop, giochi, statistiche).
+- Backup verifica: `curl -k -u "elastic:$ELASTIC_PASSWORD" https://localhost:9200/_snapshot/ft_archive_repo?pretty` per confermare configurazione archivio.
 
 ## Architecture
 
@@ -81,6 +62,21 @@ npm install
 npm run dev    # Development with hot reload
 ```
 
+### Setup locale senza Docker (PowerShell)
+
+Per automatizzare i passaggi di setup (creazione `.env`, certificati, `npm install`) è disponibile `scripts/setup-local.ps1`.
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/setup-local.ps1             # solo setup
+pwsh -ExecutionPolicy Bypass -File scripts/setup-local.ps1 -StartDev   # setup + npm run dev
+pwsh -ExecutionPolicy Bypass -File scripts/setup-local.ps1 -BuildAssets -StartProd
+```
+
+Opzioni utili:
+- `-ForceEnv`, `-ForceCerts`, `-ForceInstall` per rigenerare rispettivamente `.env`, certificati o `node_modules`.
+- `-BuildAssets` esegue `npm run build` prima dell'avvio.
+- `-StartDev` (watcher) o `-StartProd` (solo Fastify) per avviare immediatamente l'app.
+
 **Container Management**:
 ```bash
 make up        # Start all services
@@ -90,141 +86,11 @@ make logs      # View service logs
 make test      # Health check all services
 ```
 
-=======
-npm uninstall <nome pacchetto>
-```
+## API Info
 
-## API INFO
+La documentazione REST è disponibile su https://localhost:5000/docs (Swagger UI). Il file `app/src/request.http` contiene esempi di richieste e si integra con l’estensione VS Code [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client).
 
-la documentazioni relativa alle api si trova su http://localhost:5000/docs.
-Il file request.http simula delle chiamate curl e dipenda dall'estensione https://marketplace.visualstudio.com/items?itemName=humao.rest-client (cerca REST client)
-
-
----
-
-## Panoramica della Soluzione
-
-Per completare il progetto nel minor tempo possibile, la strategia migliore è scegliere un gruppo di moduli che siano tecnicamente coerenti e che si costruiscano l'uno sull'altro. In questo modo, le tecnologie che impari per un modulo ti saranno utili anche per il successivo, riducendo i tempi di apprendimento e sviluppo.
-
-La mia proposta si basa sull'idea di unificare lo stack tecnologico attorno a **Node.js, TypeScript e Fastify**, poiché questa combinazione è potente, moderna e ti permette di usare lo stesso linguaggio (TypeScript/JavaScript) sia per il frontend che per il backend.
-
----
-
-## Strategia Generale per la Massima Efficienza
-
-* **Unificare lo Stack Tecnologico**: Il progetto ti dà la possibilità di rimpiazzare il backend PHP con un framework Node.js. Farlo subito ti farà risparmiare un'enorme quantità di tempo, evitando di dover gestire due ecosistemi completamente diversi (PHP e TypeScript/Node.js).
-* **Costruire in Funzione dei Moduli**: Invece di completare la parte obbligatoria con le tecnologie di base per poi modificarla, costruiremo fin da subito la base del progetto utilizzando le tecnologie dei moduli che sceglieremo.
-* **Scegliere Moduli Sinergici**: Selezioneremo moduli che condividono tecnologie o concetti simili. Ad esempio, i moduli "Remote Players" e "Live Chat" possono entrambi utilizzare WebSockets, quindi implementare uno ti renderà più facile implementare l'altro.
-
----
-
-## Selezione dei Moduli: Il Percorso più Rapido (7 Moduli Major)
-
-Per raggiungere il 100% del progetto, sono necessari 7 moduli principali (o una combinazione di principali e minori, dove 2 minori valgono 1 principale). Ecco una selezione pensata per la massima efficienza e coerenza tecnica.
-
-### Cluster 1: Il Cuore Tecnologico (Totale: 2 Moduli Major)
-
-Questi moduli definiscono la nostra base tecnica. Sceglierli subito ci dà una direzione chiara fin dall'inizio.
-
-* **Major module: Use a framework to build the backend**
-    * **Tecnologia**: Fastify con Node.js.
-    * **Perché**: Questo è il modulo più importante per la nostra strategia. Sostituisce PHP e ci permette di usare JavaScript/TypeScript per tutto, rendendo lo sviluppo più rapido e coerente.
-* **Minor module: Use a database for the backend**
-    * **Tecnologia**: SQLite.
-    * **Perché**: È un requisito per molti altri moduli (come la gestione utenti). SQLite è leggero, facile da configurare (è un semplice file) e perfetto per questo progetto.
-* **Minor module: Use a framework or toolkit to build the front-end**
-    * **Tecnologia**: Tailwind CSS con TypeScript.
-    * **Perché**: Tailwind CSS è un framework di CSS "utility-first" che permette di creare interfacce molto velocemente senza scrivere CSS personalizzato. Si integra perfettamente con TypeScript.
-
-Abbiamo già collezionato 1 modulo Major e 2 Minor, che equivalgono a **2 Moduli Major**.
-
-### Cluster 2: Gestione Utenti e Sicurezza (Totale: 2 Moduli Major)
-
-Ora che abbiamo un backend e un database, possiamo costruire le funzionalità per l'utente.
-
-* **Major module: Standard user management, authentication...**
-    * **Perché**: Questo modulo è un'evoluzione naturale del nostro backend. Aggiunge registrazione, login, profili utente, avatar e una lista amici. È una funzionalità fondamentale per quasi ogni sito web moderno.
-* **Major module: Implement Two-Factor Authentication (2FA) and JWT**
-    * **Perché**: Si integra perfettamente con il modulo di gestione utenti appena creato. JWT (JSON Web Tokens) è lo standard moderno per gestire le sessioni in una Single-Page Application (SPA), e l'aggiunta del 2FA è un passo logico successivo per la sicurezza.
-
-A questo punto siamo a **4 Moduli Major**.
-
-### Cluster 3: Gameplay e Interattività (Totale: 1 Modulo Major)
-
-Questo modulo migliorano l'esperienza di gioco e la rendono più sociale.
-
-* **Major module: Remote players**
-    * **Perché**: Permette a due giocatori di sfidarsi da computer diversi. Questa è una funzionalità chiave per un gioco online e introduce l'uso dei WebSockets, una tecnologia fondamentale per la comunicazione in tempo reale.
-
-### cluster 4: DevOps (Totale: 1 modulo major)
-
-implementazione di un docker compose più coplesso con un sistema di logging
-
-* **Major module: ELK**
-    * **Perché**: sappiamo già come implementare lo stack elk
-
-Ora abbiamo raggiunto i **6 Moduli Major**.
-
-### Cluster 5: Dati e Personalizzazione (Totale: 1 Modulo Major)
-
-Questi due moduli minori sono relativamente semplici da implementare una volta che la struttura principale è pronta.
-
-* **Minor module: User and Game Stats Dashboards**
-    * **Perché**: Mostra le statistiche dell'utente (vittorie, sconfitte, ecc.). Poiché stiamo già salvando i dati delle partite e degli utenti nel nostro database SQLite, creare delle pagine che mostrino queste informazioni è un lavoro prevalentemente di frontend.
-* **Minor module: Game customization options**
-    * **Perché**: Aggiunge opzioni come power-up o mappe diverse. Questo modulo non richiede nuove tecnologie complesse, ma si concentra sulla logica del gioco stesso. È un modo divertente per arricchire l'esperienza senza dover imparare un nuovo framework.
-
-Con questi 2 moduli Minor, raggiungiamo l'equivalente di **7 Moduli Major**.
-
----
-
-## Riepilogo del Percorso Proposto
-
-Ecco la lista completa per raggiungere il 100%:
-
-* **Major (x4)**:
-    * Backend Framework (Fastify/Node.js)
-    * Standard User Management
-    * 2FA and JWT
-    * Remote Players
-    * ELK
-* **Minor (x4, valgono 2 Major)**:
-    * Database (SQLite)
-    * Frontend Toolkit (Tailwind CSS)
-    * User/Game Stats Dashboards
-    * Game Customization Options
-
----
-
-## Piano d'Azione Passo-Passo
-
-### Fase 1: Setup Iniziale (Docker & Stack)
-
-1.  Crea il tuo **Dockerfile** per eseguire un ambiente Node.js.
-2.  Inizializza un progetto Node.js con TypeScript.
-3.  Installa e configura **Fastify** per il backend e **Tailwind CSS** per il frontend.
-4.  Crea una pagina "Hello World" per assicurarti che tutto funzioni.
-
-### Fase 2: Realizzazione della Parte Obbligatoria
-
-1.  Implementa il gioco **Pong base** (due giocatori sullo stesso computer) usando TypeScript per la logica e l'HTML/Canvas per la visualizzazione.
-2.  Crea il sistema di torneo semplice con l'inserimento degli alias, salvandoli temporaneamente in memoria o già nel database SQLite.
-
-### Fase 3: Sviluppo dei Moduli
-
-Implementa in ordine:
-
-1.  **Gestione Utenti Standard**: Crea le tabelle nel database SQLite, le rotte API su Fastify per registrazione/login e le pagine frontend.
-2.  **JWT e 2FA**: Proteggi le tue API con JWT e aggiungi il flusso per la configurazione del 2FA.
-3.  **Remote Players**: Implementa i WebSockets su Fastify per gestire la comunicazione in tempo reale per il gioco.
-4.  **ELK**: integrazione di un sistema di logging per l'applicazione.
-5.  **Dashboard e Personalizzazione**: Crea le pagine per le statistiche e aggiungi la logica per le opzioni di gioco personalizzate.
-
-### Fase 4: Sicurezza e Rifinitura
-
-1.  Assicurati di aver implementato tutte le misure di sicurezza obbligatorie (hashing delle password, protezione da SQL injection/XSS, HTTPS).
-
----
+## Validation & Monitoring
 
 **ELK Stack Validation**:
 ```bash
@@ -240,6 +106,7 @@ REST API documentation available at https://localhost:5000/docs (Swagger UI)
 - `/auth/login` - JWT authentication with 2FA support
 - `/auth/register` - User registration with bcrypt hashing
 - `/profile/info` - User profile data (JWT protected)
+- `/profile/stats` - Aggregated matches/wins/losses per game (JWT protected)
 - `/profile/generate2FA` - TOTP secret generation with QR code
 - `/profile/verify2FA` - TOTP verification and activation
 - `/profile/avatar` - Avatar upload (multipart)
@@ -282,25 +149,17 @@ elk/                        # ELK Stack configuration
 - `friends` table: user_id, friend_id relationships with unique constraints
 - `matches` table: player1_id, player2_id, winner_id, score, date tracking
 
-**Missing Security Features** (fact-checked):
-- XSS protection implementation
-- CSRF token system  
-- Rate limiting middleware
-- Input sanitization validation
+**Security Hardening Opportunities** (ancora da valutare):
+- Protezioni XSS lato frontend/backend.
+- Meccanismo CSRF token per richieste mutative.
+- Rate limiting middleware per endpoint pubblici.
+- Sanitizzazione/validazione avanzata degli input.
 
-## Next Development Priorities
+## Operational Follow-ups
 
-**Immediate (Project Foundation)**:
-1. Core Pong game implementation with Canvas/WebGL
-2. Tournament system with player matchmaking
-3. User authentication frontend forms
-4. Game interface and controls
-
-**Short-term (Module Completion)**:
-1. Remote Players - Real-time multiplayer via WebSocket
-2. Live Chat - Messaging system with WebSocket
-3. AI Opponent - Game AI with strategic decision making
-4. Complete User Management frontend interface
+- **Runtime QA**: rieseguire `make up` e testare la SPA per confermare behavior dopo ogni modifica.
+- **Documentazione**: sincronizzare eventuali aggiornamenti futuri (es. nuove dashboard Kibana) in `docs/` e nel README.
+- **Hardening**: valutare le attività elencate sopra (XSS/CSRF/rate limiting) in base ai requisiti addizionali eventualmente richiesti dalla correzione.
 
 ## Resources
 
