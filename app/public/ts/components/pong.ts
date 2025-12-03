@@ -6,7 +6,8 @@ import { logInfo, logError } from "../utils/logger.js";
 import { Win98Window } from "../components/Win98Window.js";
 
 
-export function pong(userInfo: any, app: HTMLElement){
+export function pong(userInfo: any, app: HTMLElement)
+{
 	const appButton = document.querySelector("#game-icon");
 	let showpong: Win98Window | null = null;
 
@@ -31,7 +32,8 @@ export function pong(userInfo: any, app: HTMLElement){
 				initializeGameSelection(showpong!.element, userInfo);
 			}, 100);
 		}
-		catch(err){
+		catch(err)
+		{
 			logError("an error occured trying to start pong game", err as any)
 		}
 	})
@@ -74,7 +76,8 @@ interface TournamentData {
 const tournamentResults = new Map<number, [number, number, number]>();
 
 // Funzione per inizializzare la selezione del gioco (pong o peow)
-function initializeGameSelection(windowElement: HTMLElement, currentUser: any) {
+function initializeGameSelection(windowElement: HTMLElement, currentUser: any)
+{
 	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
 	const pongGameBtn = windowElement.querySelector('#pong-game-btn') as HTMLButtonElement;
 	const peowGameBtn = windowElement.querySelector('#peow-game-btn') as HTMLButtonElement;
@@ -102,7 +105,8 @@ function initializeGameSelection(windowElement: HTMLElement, currentUser: any) {
 }
 
 // Funzione per inizializzare la selezione modalità di gioco
-function initializeGameModeSelection(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+function initializeGameModeSelection(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow')
+{
 	const gameSelection = windowElement.querySelector('#game-selection') as HTMLElement;
 	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
 	const playerSelection = windowElement.querySelector('#player-selection') as HTMLElement;
@@ -265,7 +269,8 @@ function initializeGameModeSelection(windowElement: HTMLElement, currentUser: an
 }
 
 // Funzione per avviare il gioco con la modalità selezionata
-function startGame(windowElement: HTMLElement, gameMode: GameMode) {
+function startGame(windowElement: HTMLElement, gameMode: GameMode)
+{
 	// Nascondi i menu e mostra il gioco
 	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
 	const playerSelection = windowElement.querySelector('#player-selection') as HTMLElement;
@@ -307,7 +312,8 @@ function startGame(windowElement: HTMLElement, gameMode: GameMode) {
 // =============== FUNZIONI PER LA GESTIONE DEL TORNEO ===============
 
 // Funzione per inizializzare il setup del torneo
-function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow')
+{
 	const modeSelection = windowElement.querySelector('#game-mode-selection') as HTMLElement;
 	const tournamentSetup = windowElement.querySelector('#tournament-setup') as HTMLElement;
 	const currentUserDisplay = windowElement.querySelector('#current-user-display') as HTMLElement;
@@ -337,7 +343,8 @@ function initializeTournamentSetup(windowElement: HTMLElement, currentUser: any,
 }
 
 // Funzione per inizializzare tutti gli event listeners del torneo
-function initializeTournamentEventListeners(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+function initializeTournamentEventListeners(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow')
+{
 	const verifyButtons = windowElement.querySelectorAll('.verify-player-btn') as NodeListOf<HTMLButtonElement>;
 	const startTournamentBtn = windowElement.querySelector('#start-tournament-btn') as HTMLButtonElement;
 	const backToMenuTournamentBtn = windowElement.querySelector('#back-to-menu-tournament-btn') as HTMLButtonElement;
@@ -376,7 +383,8 @@ function initializeTournamentEventListeners(windowElement: HTMLElement, currentU
 }
 
 // Funzione per verificare un singolo giocatore del torneo
-async function verifyTournamentPlayer(windowElement: HTMLElement, playerNum: string, currentUser: any) {
+async function verifyTournamentPlayer(windowElement: HTMLElement, playerNum: string, currentUser: any)
+{
 	const playerInput = windowElement.querySelector(`#player-${playerNum}`) as HTMLInputElement;
 	const verifyButton = windowElement.querySelector(`.verify-player-btn[data-player="${playerNum}"]`) as HTMLButtonElement;
 	const validationMessage = windowElement.querySelector('#tournament-validation-message') as HTMLElement;
@@ -485,7 +493,8 @@ async function verifyTournamentPlayer(windowElement: HTMLElement, playerNum: str
 }
 
 // Funzione per controllare se tutti i giocatori sono stati verificati
-function checkAllPlayersVerified(windowElement: HTMLElement) {
+function checkAllPlayersVerified(windowElement: HTMLElement)
+{
 	const verifyButtons = windowElement.querySelectorAll('.verify-player-btn') as NodeListOf<HTMLButtonElement>;
 	const startTournamentBtn = windowElement.querySelector('#start-tournament-btn') as HTMLButtonElement;
 	
@@ -523,7 +532,8 @@ function checkAllPlayersVerified(windowElement: HTMLElement) {
 }
 
 // Funzione per iniziare il torneo (MODIFICATA per usare il ranking)
-async function startTournament(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow') {
+async function startTournament(windowElement: HTMLElement, currentUser: any, selectedGame: 'pong' | 'peow')
+{
 	// Raccoglie tutti i giocatori verificati
 	const players: TournamentPlayer[] = [];
 	
@@ -644,7 +654,8 @@ async function startTournament(windowElement: HTMLElement, currentUser: any, sel
 }
 
 // Funzione per creare il bracket del torneo (MODIFICATA per usare il ranking)
-function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pong' | 'peow'): TournamentData {
+function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pong' | 'peow'): TournamentData
+{
 	console.log('🏆 Creando bracket del torneo con ranking...');
 	
 	// Non mescolare più casualmente - useremo il ranking
@@ -678,7 +689,8 @@ function createTournamentBracket(players: TournamentPlayer[], selectedGame: 'pon
 }
 
 // Funzione per visualizzare il bracket del torneo
-function displayTournamentBracket(windowElement: HTMLElement, tournamentData: TournamentData) {
+function displayTournamentBracket(windowElement: HTMLElement, tournamentData: TournamentData)
+{
 	const bracketDisplay = windowElement.querySelector('#bracket-display') as HTMLElement;
 	const currentMatchInfo = windowElement.querySelector('#current-match-info') as HTMLElement;
 	
@@ -774,7 +786,8 @@ function displayTournamentBracket(windowElement: HTMLElement, tournamentData: To
 }
 
 // Funzione per aggiornare le info del match corrente
-function updateCurrentMatchInfo(windowElement: HTMLElement, tournamentData: TournamentData) {
+function updateCurrentMatchInfo(windowElement: HTMLElement, tournamentData: TournamentData)
+{
 	const currentMatchInfo = windowElement.querySelector('#current-match-info') as HTMLElement;
 	const startMatchBtn = windowElement.querySelector('#start-current-match-btn') as HTMLButtonElement;
 	
@@ -814,7 +827,8 @@ function updateCurrentMatchInfo(windowElement: HTMLElement, tournamentData: Tour
 }
 
 // Funzione per inizializzare gli event listeners del bracket
-function initializeBracketEventListeners(windowElement: HTMLElement, tournamentData: TournamentData) {
+function initializeBracketEventListeners(windowElement: HTMLElement, tournamentData: TournamentData)
+{
 	const startMatchBtn = windowElement.querySelector('#start-current-match-btn') as HTMLButtonElement;
 	
 	startMatchBtn?.addEventListener('click', () => {
@@ -823,7 +837,8 @@ function initializeBracketEventListeners(windowElement: HTMLElement, tournamentD
 }
 
 // Funzione per iniziare il match corrente del torneo
-function startCurrentTournamentMatch(windowElement: HTMLElement, tournamentData: TournamentData) {
+function startCurrentTournamentMatch(windowElement: HTMLElement, tournamentData: TournamentData)
+{
 	const currentMatches = tournamentData.matches.filter(m => m.round === tournamentData.currentRound);
 	const currentMatch = currentMatches[tournamentData.currentMatchIndex];
 	
@@ -849,7 +864,8 @@ function startCurrentTournamentMatch(windowElement: HTMLElement, tournamentData:
 }
 
 // Funzione per avanzare al prossimo round del torneo
-function advanceToNextRound(windowElement: HTMLElement, tournamentData: TournamentData) {
+function advanceToNextRound(windowElement: HTMLElement, tournamentData: TournamentData)
+{
 	const completedMatches = tournamentData.matches.filter(m => m.round === tournamentData.currentRound && m.winner);
 	const totalMatchesInRound = tournamentData.matches.filter(m => m.round === tournamentData.currentRound).length;
 	
@@ -890,7 +906,8 @@ function advanceToNextRound(windowElement: HTMLElement, tournamentData: Tourname
 }
 
 // Funzione per gestire la fine di un match del torneo
-function handleTournamentMatchEnd(windowElement: HTMLElement, gameMode: GameMode, winner: 'player1' | 'player2') {
+function handleTournamentMatchEnd(windowElement: HTMLElement, gameMode: GameMode, winner: 'player1' | 'player2')
+{
 	if (!gameMode.tournamentData) return;
 	
 	// Trova il match corrente e imposta il vincitore
@@ -933,7 +950,8 @@ function handleTournamentMatchEnd(windowElement: HTMLElement, gameMode: GameMode
 }
 
 // Funzione per aggiornare i risultati del torneo
-function updateTournamentResults(playerId: number, won: boolean) {
+function updateTournamentResults(playerId: number, won: boolean)
+{
 	const currentStats = tournamentResults.get(playerId) || [0, 0, 0];
 	const newStats: [number, number, number] = [
 		currentStats[0] + 1, // totalMatches
@@ -951,7 +969,8 @@ async function getUserMatchRanking(players: TournamentPlayer[], gameName: 'pong'
 	totalMatches: number,
 	wins: number,
 	losses: number
-}>> {
+}>>
+{
 	try {
 		console.log(`🏆 Caricando classifica utenti per torneo ${gameName}...`, players.map(p => `${p.display_name} (${p.id})`));
 
@@ -1088,7 +1107,8 @@ async function getUserMatchRanking(players: TournamentPlayer[], gameName: 'pong'
 }
 
 // Funzione helper per mostrare messaggi di validazione
-function showValidationMessage(element: HTMLElement | null, message: string, color: string) {
+function showValidationMessage(element: HTMLElement | null, message: string, color: string)
+{
 	if (element) {
 		element.textContent = message;
 		element.style.color = color;
@@ -1096,7 +1116,8 @@ function showValidationMessage(element: HTMLElement | null, message: string, col
 }
 
 // Funzione per tornare al menu principale
-function backToMainMenu(windowElement: HTMLElement) {
+function backToMainMenu(windowElement: HTMLElement)
+{
 	// Nascondi tutte le schermate
 	const screens = [
 		'#game-selection',
@@ -1127,7 +1148,8 @@ function backToMainMenu(windowElement: HTMLElement) {
 }
 
 // Funzione per resettare il setup del torneo
-function resetTournamentSetup(windowElement: HTMLElement) {
+function resetTournamentSetup(windowElement: HTMLElement)
+{
 	// Reset degli input dei giocatori
 	for (let i = 2; i <= 8; i++) {
 		const input = windowElement.querySelector(`#player-${i}`) as HTMLInputElement;
@@ -1165,7 +1187,8 @@ function resetTournamentSetup(windowElement: HTMLElement) {
 }
 
 // Funzione per salvare i risultati delle partite nel database
-async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightScore: number, winner: 'player1' | 'player2') {
+async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightScore: number, winner: 'player1' | 'player2')
+{
 	console.log('🔍 saveMatchToDatabase CHIAMATA!', { gameMode, leftScore, rightScore, winner });
 	
 	// Ignora le partite contro la CPU
@@ -1231,7 +1254,8 @@ async function saveMatchToDatabase(gameMode: GameMode, leftScore: number, rightS
 }
 
 // vecchio codice inizia da qui
-function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
+function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode)
+{
 	const canvas = windowElement.querySelector('#gameCanvas') as HTMLCanvasElement;
 	if (!canvas) {
 		logError('Canvas non trovato nella finestra pong!');
@@ -1253,19 +1277,22 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		public height: number = 100;
 		public speed: number = 15;
 
-		constructor(x: number, y: number) {
+		constructor(x: number, y: number)
+		{
 			this.x = x;
 			this.y = y;
 		}
 
-		move(dy: number) {
+		move(dy: number)
+		{
 			this.y += dy;
 			// Limiti bordo
 			if (this.y < 0) this.y = 0;
 			if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
 		}
 
-		draw(ctx: CanvasRenderingContext2D) {
+		draw(ctx: CanvasRenderingContext2D)
+		{
 			ctx.fillRect(this.x, this.y, this.width, this.height);
 		}
 	}
@@ -1278,17 +1305,20 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		public dx: number = 5;
 		public dy: number = 5;
 
-		constructor(x: number, y: number) {
+		constructor(x: number, y: number)
+		{
 			this.x = x;
 			this.y = y;
 		}
 
-		move() {
+		move()
+		{
 			this.x += this.dx;
 			this.y += this.dy;
 		}
 
-		draw(ctx: CanvasRenderingContext2D) {
+		draw(ctx: CanvasRenderingContext2D)
+		{
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
 			ctx.fill();
@@ -1310,7 +1340,8 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	let moveIntervals: number[] = []; // per tracciare tutti i moveInterval 
 
 	// Funzione per pulire tutti gli interval e event listeners
-	function cleanup() {
+	function cleanup()
+	{
 		if (enemyInterval) {
 			window.clearInterval(enemyInterval);
 			enemyInterval = null;
@@ -1396,14 +1427,16 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	document.addEventListener('keydown', keydownHandler);
 	document.addEventListener('keyup', keyupHandler);
 
-	function resetBall() {
+	function resetBall()
+	{
 		ball.x = canvas.width / 2;
 		ball.y = canvas.height / 2;
 		ball.dx = (Math.random() > 0.5 ? 5 : -5);
 		ball.dy = (Math.random() > 0.5 ? 5 : -5);
 	}
 
-	function restartGame() {
+	function restartGame()
+	{
 		// Pulisci tutti gli interval
 		cleanup();
 		
@@ -1431,14 +1464,16 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function drawScore() {
+	function drawScore()
+	{
 		ctx.fillStyle = "#fff"; // Colore bianco per il testo
 		ctx.font = '40px Arial';
 		ctx.fillText(`${leftScore}`, canvas.width / 4, 50);
 		ctx.fillText(`${rightScore}`, 3 * canvas.width / 4, 50);
 	}
 
-	function drawGameOver() {
+	function drawGameOver()
+	{
 		if (!gameRunning && winner) {
 			// Sfondo semi-trasparente
 			ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -1473,7 +1508,8 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function gameLoop() {
+	function gameLoop()
+	{
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Disegna sempre gli elementi del gioco
@@ -1514,20 +1550,9 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 				ball.y < leftPaddle.y + leftPaddle.height
 			) 
 			{
-				// Calcola dove ha colpito la palla sul paddle (0 = top, 1 = bottom)
-				const hitPoint = (ball.y - leftPaddle.y) / leftPaddle.height;
-				
-				// Se colpisce nel centro del paddle (tra 0.4 e 0.6), tiro dritto
-				if (hitPoint >= 0.45 && hitPoint <= 0.55) {
-					ball.dy = 0; // Tiro perfettamente orizzontale
-					ball.dx = 30;  // Velocità maggiore per il tiro dritto
-					console.log('🎯 TIRO DRITTO! Hit point:', hitPoint.toFixed(2));
-				} else {
-					// Tiro normale con angolo
-					ball.dy *= 1.2;
-					ball.dx *= -1;
-				}
-				
+				// Tiro normale con angolo
+				ball.dy *= 1.2;
+				ball.dx *= -1;
 				ball.x = leftPaddle.x + leftPaddle.width + ball.radius;
 			}
 
@@ -1583,17 +1608,20 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		requestAnimationFrame(gameLoop);
 	}
 
-	function printBallImpactY(y: number) {
+	function printBallImpactY(y: number)
+	{
 		console.log('-------------------------------------------------Preview y =', y);
 	}
 
-	function printBallGoalY() {
+	function printBallGoalY()
+	{
 		if (ball.x + ball.radius > canvas.width) {
 			console.log('La palla ha segnato sulla destra a y =', ball.y);
 		}
 	}
 
-	function enemy() {
+	function enemy()
+	{
 		// Pulisci tutti gli interval precedenti
 		cleanup();
 		
@@ -1707,7 +1735,8 @@ function initializepongGame(windowElement: HTMLElement, gameMode?: GameMode) {
 
 // =============== peow GAME IMPLEMENTATION ===============
 
-function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
+function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode)
+{
 	const canvas = windowElement.querySelector('#gameCanvas') as HTMLCanvasElement;
 	if (!canvas) {
 		logError('Canvas non trovato nella finestra peow!');
@@ -1731,26 +1760,30 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		public speed: number = 15;
 		public hitCount: number = 0;
 
-		constructor(x: number, y: number) {
+		constructor(x: number, y: number)
+		{
 			this.x = x;
 			this.y = y;
 		}
 
-		move(dy: number) {
+		move(dy: number)
+		{
 			this.y += dy;
 			// Limiti bordo
 			if (this.y < 0) this.y = 0;
 			if (this.y + this.currentHeight > canvas.height) this.y = canvas.height - this.currentHeight;
 		}
 
-		getCenter(): { x: number, y: number } {
+		getCenter(): { x: number, y: number }
+		{
 			return {
 				x: this.x + this.width / 2,
 				y: this.y + this.currentHeight / 2
 			};
 		}
 
-		takeDamage(): boolean {
+		takeDamage(): boolean
+		{
 			this.hitCount++;
 			this.currentHeight = this.originalHeight * Math.pow(2/3, this.hitCount);
 			
@@ -1758,7 +1791,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 			return this.hitCount >= 3;
 		}
 
-		draw(ctx: CanvasRenderingContext2D) {
+		draw(ctx: CanvasRenderingContext2D)
+		{
 			// Paddle
 			ctx.fillStyle = '#fff';
 			ctx.fillRect(this.x, this.y, this.width, this.currentHeight);
@@ -1781,13 +1815,15 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		public radius: number = 4;
 		public active: boolean = true;
 
-		constructor(x: number, y: number, direction: number) {
+		constructor(x: number, y: number, direction: number)
+		{
 			this.x = x;
 			this.y = y;
 			this.dx = direction * 10// velocità proiettile
 		}
 
-		move() {
+		move()
+		{
 			this.x += this.dx;
 			this.y += this.dy;
 			
@@ -1797,7 +1833,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 			}
 		}
 
-		draw(ctx: CanvasRenderingContext2D) {
+		draw(ctx: CanvasRenderingContext2D)
+		{
 			if (!this.active) return;
 			
 			ctx.fillStyle = '#ffff00';
@@ -1806,7 +1843,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 			ctx.fill();
 		}
 
-		checkCollision(paddle: peowPaddle): boolean {
+		checkCollision(paddle: peowPaddle): boolean
+		{
 			if (!this.active) return false;
 			
 			return this.x + this.radius > paddle.x &&
@@ -1866,12 +1904,14 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 	document.addEventListener('keydown', keydownHandler);
 	document.addEventListener('keyup', keyupHandler);
 
-	function shootBullet(paddle: peowPaddle, direction: number) {
+	function shootBullet(paddle: peowPaddle, direction: number)
+	{
 		const center = paddle.getCenter();
 		bullets.push(new Bullet(center.x, center.y, direction));
 	}
 
-	function updateAI() {
+	function updateAI()
+	{
 		// AI per il paddle destro (solo se abilitata)
 		if (isAIEnabled && gameRunning) {
 			const paddleCenter = rightPaddle.y + rightPaddle.currentHeight / 2;
@@ -1891,7 +1931,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function updateBullets() {
+	function updateBullets()
+	{
 		// Aggiorna cooldown
 		if (leftShootCooldown > 0) leftShootCooldown--;
 		if (rightShootCooldown > 0) rightShootCooldown--;
@@ -1926,7 +1967,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		bullets = bullets.filter(bullet => bullet.active);
 	}
 
-	function endGame(winnerSide: 'left' | 'right') {
+	function endGame(winnerSide: 'left' | 'right')
+	{
 		gameRunning = false;
 		
 		if (winnerSide === 'left') {
@@ -1960,7 +2002,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function draw() {
+	function draw()
+	{
 		// Pulisci canvas
 		ctx.fillStyle = '#000';
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1991,7 +2034,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function drawHits() {
+	function drawHits()
+	{
 		ctx.fillStyle = '#fff';
 		ctx.font = '24px Arial';
 		
@@ -2004,7 +2048,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		ctx.textAlign = 'left';
 	}
 
-	function drawGameOver() {
+	function drawGameOver()
+	{
 		if (!gameRunning && winner) {
 			// Sfondo semi-trasparente
 			ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -2034,7 +2079,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		}
 	}
 
-	function restartGame() {
+	function restartGame()
+	{
 		// Reset game state
 		gameRunning = true;
 		winner = null;
@@ -2053,7 +2099,8 @@ function initializepeowGame(windowElement: HTMLElement, gameMode?: GameMode) {
 		rightPaddle = new peowPaddle(canvas.width - 50, canvas.height / 2 - 60);
 	}
 
-	function gameLoop() {
+	function gameLoop()
+	{
 		if (gameRunning) {
 			// Movimento paddle (allineato a pong)
 			if (wPressed) leftPaddle.move(-leftPaddle.speed);
