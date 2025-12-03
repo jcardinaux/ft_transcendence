@@ -23,6 +23,30 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 				}
 			});
 			app.appendChild(showUserWindow.element);
+
+			const token = localStorage.getItem('token');
+			const friendMap = new Map<number, any>();
+
+			if (token) {
+				try {
+					const friendsRes = await fetch('/api/profile/getFriends', {
+						method: 'GET',
+						headers: {
+							'accept': 'application/json',
+							'Authorization': `Bearer ${token}`
+						}
+					});
+					if (friendsRes.ok) {
+						const friends = await friendsRes.json();
+						friends.forEach((friend: any) => {
+							friendMap.set(friend.id, friend);
+						});
+					}
+				} catch (err) {
+					logError('error retrieving friends list');
+				}
+			}
+
 			const response = await fetch('/api/auth/users', {
 				method: 'GET',
 				headers: {
@@ -36,10 +60,11 @@ export function showUserApllication(userInfo: any, app: HTMLElement){
 				for (const user of allUsers) {
 					if(user.id != id){
 						const card = new UserListCard({
-							id: user.id,
+							id: String(user.id),
 							avatar: user.avatar,
 							username: user.username,
-							nickname: user.display_name || ''
+							nickname: user.display_name || '',
+							friendData: friendMap.get(user.id) ?? null
 						});
 						await card.init();
 						usersListDiv.appendChild(card.element);

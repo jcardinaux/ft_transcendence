@@ -1,24 +1,27 @@
 import { logError, logInfo } from "../utils/logger.js";
 
-export interface userListCardOptions {
-	id: string;
-	avatar: string;
-	username: string;
-	nickname: string;
-}
-
-interface FriendRecord {
+export interface FriendRecord {
 	id: number;
 	is_online: number | boolean | string;
 	last_seen: string;
 }
 
+export interface userListCardOptions {
+	id: string;
+	avatar: string;
+	username: string;
+	nickname: string;
+	friendData?: FriendRecord | null;
+}
+
 export class UserListCard {
 	element: HTMLElement;
 	private options: userListCardOptions;
+	private friendSnapshot: FriendRecord | null;
 
 	constructor(options: userListCardOptions) {
 		this.options = options;
+		this.friendSnapshot = options.friendData ?? null;
 		const wrapper = document.createElement('div');
 		wrapper.className = 'UserListCard';
 
@@ -48,14 +51,14 @@ export class UserListCard {
 		if (!token) {
 			logError('Missing JWT token, cannot manage friends');
 			button.disabled = true;
+			this.updateStatus();
 			return;
 		}
 
-		const updateState = async () => {
-			const friendInfo = await this.fetchFriendInfo(token);
-			if (friendInfo) {
+		const applySnapshot = () => {
+			if (this.friendSnapshot) {
 				button.textContent = 'delate friend';
-				this.updateStatus(friendInfo);
+				this.updateStatus(this.friendSnapshot);
 				return true;
 			}
 			button.textContent = ' add to friend';
@@ -63,7 +66,17 @@ export class UserListCard {
 			return false;
 		};
 
-		let isFriend = await updateState();
+		let isFriend = applySnapshot();
+
+		if (!this.friendSnapshot) {
+			this.friendSnapshot = await this.fetchFriendInfo(token);
+			isFriend = applySnapshot();
+		}
+
+		const refreshFromServer = async () => {
+			this.friendSnapshot = await this.fetchFriendInfo(token);
+			isFriend = applySnapshot();
+		};
 
 		button.addEventListener('click', async () => {
 			button.disabled = true;
@@ -99,7 +112,7 @@ export class UserListCard {
 						logInfo(`Successfully removed friend ${this.options.username}`);
 					}
 				}
-				isFriend = await updateState();
+				await refreshFromServer();
 			} catch (err) {
 				logError(`Friend toggle failed for ${this.options.username}`);
 			} finally {
