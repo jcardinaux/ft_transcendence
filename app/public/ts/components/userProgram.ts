@@ -42,6 +42,7 @@ export function userApplication(userInfo: any, app: HTMLElement) {
 			const avatarBtn = (userWindow!.element.querySelector('#avatar-btn'));
 			const usernameBtn = (userWindow!.element.querySelector('#username-btn'));
 			const nicknameBtn = (userWindow!.element.querySelector('#nickname-btn'));
+			const passwordBtn = (userWindow!.element.querySelector('#password-btn'));
 			const inputDiv = (userWindow!.element.querySelector('#inputDiv'));
 			//gestione dell'upload dell'avatar
 			avatarBtn?.addEventListener('click', async () => {
@@ -164,6 +165,75 @@ export function userApplication(userInfo: any, app: HTMLElement) {
 							}
 						})
 					}
+				}
+			})
+			passwordBtn?.addEventListener('click', () => {
+				if (inputDiv){
+					inputDiv.innerHTML = `
+						<form id="password-change" class="flex flex-col gap-2">
+							<input type="password" id="old-password" placeholder="Current password" class="input-win98" required />
+							<input type="password" id="new-password" placeholder="New password" class="input-win98" required />
+							<input type="password" id="confirm-password" placeholder="Confirm new password" class="input-win98" required />
+							<button type="submit" class="btn-win98 self-start"> apply </button>
+						</form>
+						<div id="password-feedback" class="mt-2 text-sm"></div>
+					`;
+					inputDiv.classList.remove('hidden');
+					const passwordForm = userWindow!.element.querySelector('#password-change') as HTMLFormElement;
+					const feedback = userWindow!.element.querySelector('#password-feedback') as HTMLElement | null;
+					passwordForm?.addEventListener('submit', async (e) => {
+						e.preventDefault();
+						const oldPassword = (userWindow!.element.querySelector('#old-password') as HTMLInputElement).value.trim();
+						const newPassword = (userWindow!.element.querySelector('#new-password') as HTMLInputElement).value.trim();
+						const confirmPassword = (userWindow!.element.querySelector('#confirm-password') as HTMLInputElement).value.trim();
+						if (newPassword !== confirmPassword){
+							if (feedback){
+								feedback.textContent = 'Passwords do not match';
+								feedback.classList.remove('text-green-600');
+								feedback.classList.add('text-red-600');
+							}
+							return;
+						}
+						const token = localStorage.getItem('token');
+						if (!token){
+							logError('JWT token missing while updating password');
+							return;
+						}
+						try {
+							const response = await fetch('/api/profile/changePassword', {
+								method: 'PUT',
+								headers: {
+									'Authorization': `Bearer ${token}`,
+									'Content-Type': 'application/json'
+								},
+								body: JSON.stringify({ oldPassword, newPassword })
+							});
+							if (response.ok){
+								logInfo(`user ${id} updated password`);
+								if (feedback){
+									feedback.textContent = 'Password updated successfully';
+									feedback.classList.remove('text-red-600');
+									feedback.classList.add('text-green-600');
+								}
+								passwordForm.reset();
+							} else {
+								const errorText = await response.text();
+								if (feedback){
+									feedback.textContent = errorText || 'Error updating password';
+									feedback.classList.remove('text-green-600');
+									feedback.classList.add('text-red-600');
+								}
+							}
+						}
+						catch (error){
+							logError('error calling api /api/profile/changePassword');
+							if (feedback){
+								feedback.textContent = 'Unexpected error updating password';
+								feedback.classList.remove('text-green-600');
+								feedback.classList.add('text-red-600');
+							}
+						}
+					});
 				}
 			})
     } catch (err) {

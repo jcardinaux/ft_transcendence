@@ -53,3 +53,24 @@ export const MatchSchema = {
         date: {type: 'string'}
     }
 }
+
+export const StatsSchema = {
+    type: 'object',
+    properties: {
+        totalMatches: { type: 'integer' },
+        wins: { type: 'integer' },
+        losses: { type: 'integer' },
+        games: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    game: { type: 'string' },
+                    totalMatches: { type: 'integer' },
+                    wins: { type: 'integer' },
+                    losses: { type: 'integer' }
+                }
+            }
+        }
+    }
+}

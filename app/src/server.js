@@ -19,6 +19,7 @@ import  db from "../database/db.js"
 import profileRoute from './routes/profile.js'
 import matchesRoute from './routes/match.js'
 import frontendRoute from './routes/frontend.js'
+import webSocketRoutes from './routes/webSocket.js'
 
 const httpOption = {
     key: readFileSync(resolve('certs', 'server.key')),
@@ -162,6 +163,7 @@ const start = async () => {
         await app.register(profileRoute, {prefix: '/api/profile'})
         await app.register(matchesRoute, {prefix: '/api/matches'})
         await app.register(frontendRoute)
+        await app.register(webSocketRoutes)
         
         app.setNotFoundHandler((req, reply) => {
             const accept = req.headers.accept || '';

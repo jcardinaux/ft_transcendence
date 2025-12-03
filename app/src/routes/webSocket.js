@@ -1,4 +1,4 @@
-import { webSocketController } from "../controllers/webSocket"
+import { webSocketController } from "../controllers/webSocket.js"
 
 async function WebSocketRoutes(fastify, options){
 	fastify.get("/ws/:token", {websocket: true}, webSocketController)

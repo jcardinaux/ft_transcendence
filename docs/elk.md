@@ -73,7 +73,7 @@ Container App → Log Files → Logstash → Elasticsearch → Kibana
 
 **Containerization:**
 - Service orchestration: cert-generator → elasticsearch → app → kibana → logstash
-- Volume mounting: ./app/logs shared between app and logstash containers
+- Volume mounting: `app-logs` named Docker volume shared R/W between `ft-app` (`/app/logs`) and Logstash (`/logs`) for real-time ingestion without relying on host bind mounts
 - Health checks: All services monitored, automatic restart policies
 - Dependencies: TLS certificate generation before service startup
 
@@ -142,7 +142,7 @@ Kibana → API and web interface (port 5601)
 - Index pattern: Daily rotation with `fttranscendence-logs-YYYY.MM.dd` naming
 - Document identification: SHA256 fingerprint-based IDs for deduplication
 - Persistent volumes: elasticsearch-data, elasticsearch-archives, kibana-data, logstash-data, shared-certs
-- Volume sharing: ./app/logs mounted to both app and logstash containers for real-time log processing
+- Volume sharing: `app-logs` Docker volume mounted read/write to `ft-app:/app/logs` and `elk-logstash:/logs` for real-time log processing
 
 ### Data Processing Pipeline
 
@@ -496,13 +496,21 @@ openssl verify -CAfile /shared-certs/ca/ca-cert.pem /shared-certs/elasticsearch/
 
 **Storage Configuration**
 ```yaml
+services:
+  app:
+    volumes:
+      - app-logs:/app/logs        # Application writes structured logs here
+  logstash:
+    volumes:
+      - app-logs:/logs            # Logstash ingests the very same files via shared volume
+
 volumes:
-  shared-certs:                                      # TLS certificates shared across all services
-  elasticsearch-data:/usr/share/elasticsearch/data    # Persistent index storage
-  elasticsearch-archives:/usr/share/elasticsearch/archives  # Snapshot repository storage
-  kibana-data:/usr/share/kibana/data                 # Saved objects and dashboards
-  logstash-data:/usr/share/logstash/data             # Pipeline state and metadata
-  ./app/logs:/logs                                   # Shared log directory (app ↔ logstash)
+  shared-certs:                   # TLS certificates shared across all services
+  elasticsearch-data:             # Persistent index storage
+  elasticsearch-archives:         # Snapshot repository storage
+  kibana-data:                    # Saved objects and dashboards
+  logstash-data:                  # Pipeline state and metadata
+  app-logs:                       # Shared log directory (app ↔ logstash)
 ```
 
 **Field Mapping Template**
@@ -543,6 +551,23 @@ volumes:
 - Warm phase: 8-30 days, 0 replicas, priority 50
 - Cold phase: 31-365 days, 0 replicas, priority 0
 - Delete phase: 365 days automatic deletion
+
+### Archive Handling & Verification
+
+- **Dedicated volume**: `elasticsearch-archives` is mounted inside the Elasticsearch container as `/usr/share/elasticsearch/archives`, giving the snapshot repository persistent storage completely decoupled from the application log volume.
+- **Automated provisioning**: `elk/elasticsearch/scripts/setup-ilm.sh` waits for the cluster to be healthy, then (1) applies the ILM policy, (2) binds the `fttranscendence-logs` index template to the `fttranscendence-logs` rollover alias, (3) creates the `ft_archive_repo` filesystem snapshot repository that writes into the archives volume, and (4) registers the `ft_archive_policy` SLM schedule (daily 02:00 snapshots, retention window 5–50 snapshots / 30 days).
+- **Operational checks**: After the stack is up you can validate the archive path and policy with:
+  ```bash
+  # Repository status
+  curl -k -u "elastic:$ELASTIC_PASSWORD" https://localhost:9200/_snapshot/ft_archive_repo?pretty
+
+  # Snapshot policy execution results
+  curl -k -u "elastic:$ELASTIC_PASSWORD" https://localhost:9200/_slm/policy/ft_archive_policy?pretty
+
+  # Filesystem verification inside the container
+  docker exec -it elk-elasticsearch ls -lh /usr/share/elasticsearch/archives
+  ```
+- **Testing coverage**: `elk/tests/elk-validation.sh` automatically repairs archive permission issues by applying `chown elasticsearch:elasticsearch` and recreating the repository if the previous checks fail, guaranteeing the snapshot flow is kept healthy in CI.
 
 ## Testing Framework
 
@@ -698,7 +723,9 @@ docker logs elk-kibana
 docker volume ls | grep ft_transcendence
 
 # Reset deployment
-docker-compose down -v && rm -rf ./app/logs/* && docker-compose up -d
+docker compose down
+docker volume rm ft_transcendence_app-logs  # or the project-specific app-logs volume name
+docker compose up -d
 ```
 
 **Performance Monitoring:**

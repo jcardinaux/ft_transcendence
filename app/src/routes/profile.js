@@ -8,7 +8,8 @@ import { UsernameOpts,
 	avatarUploadOpts,
 	addFriendOpts,
 	deleteFriendOpts,
-	getFriendsOpts,} from "../schemas/profile.js"
+	getFriendsOpts,
+	statsOpts,} from "../schemas/profile.js"
 
 async function profileRoute(fastify, options){
  
@@ -22,6 +23,7 @@ async function profileRoute(fastify, options){
 	fastify.post("/addFriend/:friendID", addFriendOpts)
 	fastify.delete("/deleteFriend/:friendID", deleteFriendOpts)
 	fastify.get("/getFriends", getFriendsOpts)
+	fastify.get("/stats", statsOpts)
 }
 
 export default profileRoute

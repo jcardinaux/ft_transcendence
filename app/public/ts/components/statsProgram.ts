@@ -15,6 +15,67 @@ export interface Match{
 
 type MatchArray = matchOpts[];
 
+type GameStats = {
+	totalMatches: number;
+	wins: number;
+	losses: number;
+};
+
+type GameStatsMap = Record<string, GameStats>;
+
+const createEmptyStats = (): GameStats => ({ totalMatches: 0, wins: 0, losses: 0 });
+
+const normalizeGameName = (name?: string | null) => (name ?? 'unknown').toLowerCase();
+
+function buildStatsFromMatches(matches: MatchArray, userId: number): GameStatsMap {
+	return matches.reduce((acc, match) => {
+		const key = normalizeGameName(match.game_name);
+		if (!acc[key]) {
+			acc[key] = createEmptyStats();
+		}
+		acc[key].totalMatches += 1;
+		if (match.winner_id === userId) {
+			acc[key].wins += 1;
+		} else {
+			acc[key].losses += 1;
+		}
+		return acc;
+	}, {} as GameStatsMap);
+}
+
+async function fetchServerStats(token: string | null): Promise<GameStatsMap> {
+	if (!token) return {};
+	try {
+		const response = await fetch('/api/profile/stats', {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			}
+		});
+		if (!response.ok) {
+			return {};
+		}
+		const payload = await response.json();
+		const stats: GameStatsMap = {};
+		if (Array.isArray(payload.games)) {
+			payload.games.forEach((game: { game?: string; totalMatches?: number; wins?: number; losses?: number; }) => {
+				const key = normalizeGameName(game.game);
+				stats[key] = {
+					totalMatches: Number(game.totalMatches) || 0,
+					wins: Number(game.wins) || 0,
+					losses: Number(game.losses) || 0
+				};
+			});
+		}
+		return stats;
+	}
+	catch (error){
+		logError('Error fetching stats from server', error as {} | undefined);
+		return {};
+	}
+}
+
 export function statsProgram(userInfo: any, app: HTMLElement){
 	const appButton = document.querySelector("#chart-icon");
 	let showStats: Win98Window | null = null;
@@ -22,7 +83,8 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 	let selectedGameStats: 'pong' | 'peow' = 'pong';
 
 	appButton?.addEventListener('click', async () => {
-		const { id, username, display_name, email, avatar} = userInfo;
+		const { id, username } = userInfo;
+		const token = localStorage.getItem('token');
 		
 		if(showStats) return;
 		try{
@@ -48,71 +110,34 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 
 			if(response.status === 200){
 				const matches : MatchArray = await response.json();
-				
+				const derivedStats = buildStatsFromMatches(matches, id);
+				const serverStats = await fetchServerStats(token);
+				let statsByGame: GameStatsMap = Object.keys(serverStats).length ? serverStats : derivedStats;
+				['pong', 'peow'].forEach((game) => {
+					if (!statsByGame[game]) statsByGame[game] = createEmptyStats();
+				});
+
 				// Funzione per aggiornare le statistiche
 				function updateStats() {
 					const totGames = showStats?.element.querySelector('#total-games') as HTMLSpanElement;
 					const totWins = showStats?.element.querySelector('#total-wins') as HTMLSpanElement; 
 					const totLosses = showStats?.element.querySelector('#total-losses') as HTMLSpanElement;
-					
-					// Due grandi if/else per separare completamente la logica
-					if (selectedGameStats === 'pong') {
-						// ===== LOGICA PER PONG =====
-						let wins = 0;
-						matches.forEach((match : matchOpts) => {
-							if(match.winner_id == id && match.game_name === 'pong') {
-								wins++;
+					const stats = statsByGame[selectedGameStats] ?? createEmptyStats();
+					if(totGames && totWins && totLosses){
+						totGames.textContent = `${stats.totalMatches}`;
+						totWins.textContent = `${stats.wins}`;
+						totLosses.textContent = `${stats.losses}`;
+					}
+
+					const matchDiv = showStats?.element.querySelector('#match-list');
+					if (matchDiv) {
+						matchDiv.innerHTML = '';
+						matches.forEach(async (match : matchOpts) =>{
+							if(normalizeGameName(match.game_name) === selectedGameStats) {
+								const card = await MatchCard.init(match);
+								matchDiv.appendChild(card.element);
 							}
 						});
-						
-						const totalPongGames = matches.filter(match => match.game_name === 'pong').length;
-						const losses = totalPongGames - wins;
-						
-						if(totGames && totWins && totLosses){
-							totGames.textContent = `${totalPongGames}`;
-							totWins.textContent = `${wins}`;
-							totLosses.textContent = `${losses}`;
-						}
-						
-						const matchDiv = showStats?.element.querySelector('#match-list');
-						if (matchDiv) {
-							matchDiv.innerHTML = ''; // Pulisci la lista precedente
-							matches.forEach(async (match : matchOpts) =>{
-								if(match.game_name === 'pong') {
-									const card = await MatchCard.init(match);
-									matchDiv?.appendChild(card.element);
-								}
-							});
-						}
-						
-					} else {
-						// ===== LOGICA PER PEOW =====
-						let wins = 0;
-						matches.forEach((match : matchOpts) => {
-							if(match.winner_id == id && match.game_name === 'peow') {
-								wins++;
-							}
-						});
-						
-						const totalPeowGames = matches.filter(match => match.game_name === 'peow').length;
-						const losses = totalPeowGames - wins;
-						
-						if(totGames && totWins && totLosses){
-							totGames.textContent = `${totalPeowGames}`;
-							totWins.textContent = `${wins}`;
-							totLosses.textContent = `${losses}`;
-						}
-						
-						const matchDiv = showStats?.element.querySelector('#match-list');
-						if (matchDiv) {
-							matchDiv.innerHTML = ''; // Pulisci la lista precedente
-							matches.forEach(async (match : matchOpts) =>{
-								if(match.game_name === 'peow') {
-									const card = await MatchCard.init(match);
-									matchDiv?.appendChild(card.element);
-								}
-							});
-						}
 					}
 				}
 
@@ -147,36 +172,4 @@ export function statsProgram(userInfo: any, app: HTMLElement){
 		}
 	})
 
-	async function loadUserStats(windowElement: HTMLElement) {
-		try {
-			const token = localStorage.getItem('token');
-			const response = await fetch('/api/profile/stats', {
-				method: 'GET',
-				headers: {
-					'Authorization': `Bearer ${token}`,
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (response.ok) {
-				const stats = await response.json();
-				console.log('📊 Statistiche caricate:', stats);
-
-				// Aggiorna gli elementi HTML con i dati
-				const winsElement = windowElement.querySelector('#total-wins');
-				const lossesElement = windowElement.querySelector('#total-losses');
-				const totalElement = windowElement.querySelector('#total-games');
-
-				if (winsElement) winsElement.textContent = stats.wins || '0';
-				if (lossesElement) lossesElement.textContent = stats.losses || '0';
-				if (totalElement) totalElement.textContent = stats.totalMatches || '0';
-
-				logInfo('Statistiche aggiornate nella UI');
-			} else {
-				logError('Errore nel caricamento statistiche:', response.status);
-			}
-		} catch (error) {
-			logError('Errore caricando statistiche:', error as {} | undefined);
-		}
-	}
 }

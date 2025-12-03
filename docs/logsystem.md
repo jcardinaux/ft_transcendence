@@ -100,7 +100,7 @@ logError('API test failed', { error: error.message });
 logInfo('Form submitted', { name: data.name, email: data.email, messageLength: data.message.length });
 ```
 
-**Browser Console Access**: Global functions available via `window.logInfo()`, `window.logError()`, etc.
+**Browser Console Access**: The logger is consumed via ES module imports (e.g. `import { logInfo } from './utils/logger.js';`). If global helpers such as `window.logInfo` are desired, they must be attached manually (e.g. `Object.assign(window, { logInfo })`).
 
 ## Deployment
 
@@ -121,8 +121,8 @@ CMD ["/bin/bash", "-c", "/app/docker-utils/get-certs.sh && npm start"]
 ```
 
 **Volume Mapping**: 
-- App: `./app/logs:/app/logs` (persistent log files)
-- Logstash: `./app/logs:/logs` (read-only access to same log files)
+- App: `app-logs:/app/logs` (named Docker volume for persistent log files)
+- Logstash: `app-logs:/logs` (same shared volume mounted read-only)
 
 **Log Persistence**: Log files persist on host filesystem, accessible to both app container and Logstash container simultaneously.
 
