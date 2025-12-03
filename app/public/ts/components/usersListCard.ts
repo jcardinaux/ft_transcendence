@@ -26,6 +26,8 @@ export class UserListCard {
 					<div class=" flex flex-col text-start">	
 						<span> username: ${options.username}</span>
 						<span> nickname: ${options.nickname}</span>
+						<span class="friend-status text-xs uppercase tracking-wide text-gray-500">status: not a friend</span>
+						<span class="friend-last-seen text-xs text-gray-500">add to friend to monitor activity</span>
 					</div>
 				</div>
 				<div class="flex flex-col items-end gap-2">
@@ -157,5 +159,59 @@ export class UserListCard {
 			logError('Error refreshing friend status');
 			return null;
 		}
+	}
+
+	private updateStatus(friend?: { is_online?: number | boolean, last_seen?: string }) {
+		const statusElem = this.element.querySelector('.friend-status') as HTMLElement | null;
+		const lastSeenElem = this.element.querySelector('.friend-last-seen') as HTMLElement | null;
+
+		if (!statusElem || !lastSeenElem) return;
+
+		const setOnlineClasses = (isOnline: boolean) => {
+			if (isOnline) {
+				statusElem.classList.add('text-green-600');
+				statusElem.classList.remove('text-gray-500');
+				lastSeenElem.classList.add('text-green-600');
+				lastSeenElem.classList.remove('text-gray-500');
+			} else {
+				statusElem.classList.remove('text-green-600');
+				statusElem.classList.add('text-gray-500');
+				lastSeenElem.classList.remove('text-green-600');
+				lastSeenElem.classList.add('text-gray-500');
+			}
+		};
+
+		if (!friend) {
+			setOnlineClasses(false);
+			statusElem.textContent = 'status: not a friend';
+			lastSeenElem.textContent = 'add to friend to monitor activity';
+			return;
+		}
+
+		const isOnline = friend.is_online === 1 || friend.is_online === '1' || friend.is_online === true;
+		if (isOnline) {
+			setOnlineClasses(true);
+			statusElem.textContent = 'status: online';
+			lastSeenElem.textContent = 'connected now';
+		} else {
+			setOnlineClasses(false);
+			statusElem.textContent = 'status: offline';
+			lastSeenElem.textContent = `last seen ${this.formatLastSeen(friend.last_seen)}`;
+		}
+	}
+
+	private formatLastSeen(lastSeen?: string): string {
+		if (!lastSeen) return 'recently';
+		const parsed = new Date(lastSeen);
+		if (Number.isNaN(parsed.getTime())) return lastSeen;
+
+		const diffMs = Date.now() - parsed.getTime();
+		const minutes = Math.floor(diffMs / 60000);
+		if (minutes < 1) return 'just now';
+		if (minutes < 60) return `${minutes}m ago`;
+		const hours = Math.floor(minutes / 60);
+		if (hours < 24) return `${hours}h ago`;
+		const days = Math.floor(hours / 24);
+		return `${days}d ago`;
 	}
 }
