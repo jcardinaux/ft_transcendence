@@ -23,7 +23,7 @@ export class UserListCard {
 			<div class="flex justify-between items-start gap-4">
 				<div class="flex justify-start gap-8 mb-2">
 					<img src="${options.avatar}" alt="avatar" class="w-10 h-10 object-cover" />
-					<div class=" flex flex-col text-start">	
+					<div class=" flex flex-col text-start">
 						<span> username: ${options.username}</span>
 						<span> nickname: ${options.nickname}</span>
 						<span class="friend-status text-xs uppercase tracking-wide text-gray-500">status: not a friend</span>
@@ -43,11 +43,10 @@ export class UserListCard {
 
 	async init() {
 		const button = this.element.querySelector('.add-friend-btn') as HTMLButtonElement;
-		const statusElem = this.element.querySelector('.friend-status') as HTMLDivElement | null;
 		const token = localStorage.getItem('token');
 		let isFriend = Boolean(this.options.isFriend);
 		this.updateButtonLabel(button, isFriend);
-		this.updateStatus(statusElem, isFriend, this.options.isOnline ?? false, this.options.lastSeen ?? undefined);
+		this.updateStatus(isFriend ? { is_online: this.options.isOnline, last_seen: this.options.lastSeen ?? undefined } : undefined);
 
 		button.addEventListener('click', async () => {
 			if (!token) {
@@ -68,7 +67,7 @@ export class UserListCard {
 						logInfo(`Successfully added friend ${this.options.username}`);
 						isFriend = true;
 						const friendInfo = await this.fetchFriendStatus(token);
-						this.updateStatus(statusElem, true, Boolean(friendInfo?.is_online), friendInfo?.last_seen);
+						this.updateStatus(friendInfo ?? undefined);
 						this.dispatchFriendsRefresh();
 					} else {
 						const errorMsg = await response.text();
@@ -90,7 +89,7 @@ export class UserListCard {
 					if (response.status === 200){
 						logInfo(`Successfully removed friend ${this.options.username}`)
 						isFriend = false;
-						this.updateStatus(statusElem, false, false, undefined);
+						this.updateStatus(undefined);
 						this.dispatchFriendsRefresh();
 					} else {
 						const errorMsg = await response.text();
@@ -110,35 +109,6 @@ export class UserListCard {
 
 	private updateButtonLabel(button: HTMLButtonElement, isFriend: boolean) {
 		button.textContent = isFriend ? 'remove friend' : 'add friend';
-	}
-
-	private updateStatus(element: HTMLDivElement | null, isFriend: boolean, isOnline: boolean, lastSeen?: string) {
-		if (!element)
-			return;
-		if (!isFriend) {
-			element.classList.add('hidden');
-			element.textContent = '';
-			return;
-		}
-		element.classList.remove('hidden');
-		const statusColor = isOnline ? 'text-green-700' : 'text-gray-600';
-		const dotColor = isOnline ? 'bg-green-500' : 'bg-gray-400';
-		const lastSeenLabel = !isOnline && lastSeen ? ` · ultimo accesso ${this.formatDate(lastSeen)}` : '';
-		element.innerHTML = `
-			<span class="inline-flex items-center gap-2 ${statusColor}">
-				<span class="inline-block w-3 h-3 rounded-full ${dotColor}"></span>
-				${isOnline ? 'Online' : 'Offline'}${lastSeenLabel}
-			</span>
-		`;
-	}
-
-	private formatDate(value?: string) {
-		if (!value)
-			return '';
-		const date = new Date(value);
-		if (Number.isNaN(date.getTime()))
-			return value;
-		return date.toLocaleString('it-IT', {hour12: false});
 	}
 
 	private async fetchFriendStatus(token: string) {
@@ -188,7 +158,7 @@ export class UserListCard {
 			return;
 		}
 
-		const isOnline = friend.is_online === 1 || friend.is_online === '1' || friend.is_online === true;
+		const isOnline = friend.is_online === 1 || friend.is_online === true;
 		if (isOnline) {
 			setOnlineClasses(true);
 			statusElem.textContent = 'status: online';
